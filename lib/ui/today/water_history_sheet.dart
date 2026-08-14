@@ -69,7 +69,7 @@ class WaterHistorySheet extends ConsumerWidget {
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                      backgroundColor: isDark ? const Color(0xFF222A3E) : Colors.white,
                       foregroundColor: AppColors.primaryBlue,
                       elevation: 0,
                       shape: RoundedRectangleBorder(

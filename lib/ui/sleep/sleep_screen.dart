@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../domain/food/food_providers.dart';
 import '../design_system/app_button.dart';
 import '../design_system/app_colors.dart';
@@ -19,7 +20,6 @@ class SleepScreen extends ConsumerStatefulWidget {
 class _SleepScreenState extends ConsumerState<SleepScreen> {
   String _selectedRange = '7d';
 
-
   String _formatDuration(int minutes) {
     final h = minutes ~/ 60;
     final m = minutes % 60;
@@ -31,14 +31,12 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sleepLogsAsync = ref.watch(recentSleepLogsProvider);
 
-    // Compute average from real data
     final logs = sleepLogsAsync.value ?? [];
     final avgMinutes = logs.isEmpty
         ? 0
         : logs.fold<int>(0, (s, e) => s + e.durationMinutes) ~/ logs.length;
     final lastEntry = logs.isNotEmpty ? logs.first : null;
 
-    // Build bar chart heights from real data (normalised to max 8h = 480min)
     const maxMinutes = 480.0;
     final barData = logs.take(7).toList().reversed.toList();
 
@@ -60,182 +58,214 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Average Sleep Header + Log Sleep Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Last ${_selectedRange == '7d' ? '7' : '30'} Days",
-                    style: AppTypography.subhead(isDark),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        avgMinutes > 0 ? _formatDuration(avgMinutes) : "--",
-                        style: AppTypography.headlineLg(isDark),
-                      ),
-                      const SizedBox(width: 6),
-                      Text("avg", style: AppTypography.bodyMd(isDark)),
-                    ],
-                  ),
-                ],
-              ),
-              AppButton(
-                label: "Log Sleep",
-                icon: Icons.add_rounded,
-                onPressed: () => LogSleepSheet.show(context),
-                isFullWidth: false,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Sleep Bar Chart
-          GlassContainer(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              height: 180,
-              child: barData.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.bedtime_outlined, color: AppColors.sleepAccent, size: 40),
-                          const SizedBox(height: 8),
-                          Text("No sleep sessions logged yet.", style: AppTypography.bodyMd(isDark)),
-                        ],
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: barData.asMap().entries.map((entry) {
-                        final log = entry.value;
-                        final ratio = (log.durationMinutes / maxMinutes).clamp(0.0, 1.0);
-                        final dayLabel = _dayLabel(log.date);
-                        return _buildSleepBar(dayLabel, ratio, isDark);
-                      }).toList(),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Last Night's Detail
-          Text("Last Night", style: AppTypography.headlineMd(isDark)),
-          const SizedBox(height: 10),
-
-          if (lastEntry == null)
-            GlassContainer(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  "No sleep session logged yet.\nTap 'Log Sleep' to add your first entry.",
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodyMd(isDark),
-                ),
-              ),
-            )
-          else
-            GlassContainer(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                children: [
-                  _buildStageRow(
-                    "Duration",
-                    _formatDuration(lastEntry.durationMinutes),
-                    "${(lastEntry.durationMinutes / 60).toStringAsFixed(1)}h",
-                    AppColors.sleepAccent,
-                    isDark,
-                  ),
-                  if (lastEntry.bedtime != null) ...[
-                    const Divider(height: 24),
-                    _buildStageRow(
-                      "Bedtime",
-                      _formatTime(lastEntry.bedtime!),
-                      "",
-                      AppColors.primaryBlue,
-                      isDark,
-                    ),
-                  ],
-                  if (lastEntry.wakeTime != null) ...[
-                    const Divider(height: 24),
-                    _buildStageRow(
-                      "Wake Time",
-                      _formatTime(lastEntry.wakeTime!),
-                      "",
-                      AppColors.waterAccent,
-                      isDark,
-                    ),
-                  ],
-                  if (lastEntry.noteText.isNotEmpty) ...[
-                    const Divider(height: 24),
-                    _buildStageRow(
-                      "Note",
-                      lastEntry.noteText,
-                      "",
-                      AppColors.scoreAccent,
-                      isDark,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-          const SizedBox(height: 20),
-
-          // Subjective Note Card
-          GlassContainer(
-            child: Row(
+          // Sleep Duration Hero Header (Stitch Mockup)
+          Center(
+            child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.sleepAccent.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.info_outline_rounded, color: AppColors.sleepAccent, size: 22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      avgMinutes > 0 ? "${avgMinutes ~/ 60}" : "0",
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    Text(
+                      "h ",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                    Text(
+                      avgMinutes > 0 ? "${avgMinutes % 60}" : "0",
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    Text(
+                      "m",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Sleep Goal",
-                        style: AppTypography.bodyMd(isDark).copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "Aim for 7-9 hours of quality sleep per night for optimal recovery.",
-                        style: AppTypography.footnote(isDark),
-                      ),
-                    ],
+                Text(
+                  "Last Night • Goal 8h",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 24),
+
+          // Bedtime & Wake Time Cards
+          Row(
+            children: [
+              Expanded(
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(18),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.bedtime_outlined, color: AppColors.sleepAccent, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Bedtime", style: AppTypography.footnote(isDark)),
+                          const SizedBox(height: 2),
+                          Text(
+                            lastEntry?.bedtime != null
+                                ? DateFormat.jm().format(lastEntry!.bedtime!)
+                                : "--",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(18),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.wb_sunny_rounded, color: AppColors.calorieAccent, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Wake", style: AppTypography.footnote(isDark)),
+                          const SizedBox(height: 2),
+                          Text(
+                            lastEntry?.wakeTime != null
+                                ? DateFormat.jm().format(lastEntry!.wakeTime!)
+                                : "--",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Sleep Trend Card with Glowing Indigo Capsule Bars (Stitch Spec)
+          GlassContainer(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Sleep Trend",
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    Text(
+                      "Avg ${_formatDuration(avgMinutes)}",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.sleepAccent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  height: 160,
+                  child: barData.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.nightlight_round, color: AppColors.sleepAccent, size: 36),
+                              const SizedBox(height: 8),
+                              Text("No sleep sessions recorded", style: AppTypography.bodyMd(isDark)),
+                            ],
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: barData.asMap().entries.map((entry) {
+                            final log = entry.value;
+                            final ratio = (log.durationMinutes / maxMinutes).clamp(0.08, 1.0);
+                            final dayLabel = _dayLabel(log.date);
+                            return _buildSleepBar(dayLabel, ratio, isDark);
+                          }).toList(),
+                        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Log Sleep Button
+          AppButton(
+            label: "Log Sleep Session",
+            icon: Icons.add_rounded,
+            onPressed: () => LogSleepSheet.show(context),
+          ),
+          const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  String _formatTime(DateTime dt) {
-    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final m = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour < 12 ? 'AM' : 'PM';
-    return '$h:$m $period';
-  }
-
   String _dayLabel(DateTime dt) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     return days[dt.weekday % 7];
   }
 
@@ -244,46 +274,32 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Container(
-          width: 22,
-          height: 130 * heightPercent,
+          width: 24,
+          height: 120 * heightPercent,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
-              colors: [AppColors.sleepAccent, Color(0xFF8E8CE0)],
+              colors: [Color(0xFF4F46E5), Color(0xFF818CF8)],
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(dayLabel, style: AppTypography.labelSm(isDark).copyWith(fontSize: 11)),
-      ],
-    );
-  }
-
-  Widget _buildStageRow(String stageName, String duration, String percentage, Color color, bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 10),
-            Text(stageName, style: AppTypography.bodyMd(isDark).copyWith(fontWeight: FontWeight.w500)),
-          ],
-        ),
-        Row(
-          children: [
-            Text(duration, style: AppTypography.bodyMd(isDark).copyWith(fontWeight: FontWeight.bold)),
-            if (percentage.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Text(percentage, style: AppTypography.labelSm(isDark)),
-            ],
-          ],
+        const SizedBox(height: 10),
+        Text(
+          dayLabel,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
         ),
       ],
     );

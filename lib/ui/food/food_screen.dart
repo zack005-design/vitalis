@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/food/food_providers.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_scaffold.dart';
 import '../design_system/app_typography.dart';
 import '../design_system/glass_container.dart';
-import '../design_system/swipe_to_delete_row.dart';
 import 'add_custom_food_sheet.dart';
 import 'food_search_sheet.dart';
 
@@ -19,93 +19,148 @@ class FoodScreen extends ConsumerWidget {
     final totalCalories = ref.watch(totalCaloriesTodayProvider);
 
     return AppScaffold(
-      title: "Food",
+      title: "Food & Nutrition",
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Input Bar (Stitch UI Spec)
-          GlassContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          // Search Input Bar with Barcode Icon
+          GestureDetector(
             onTap: () => FoodSearchSheet.show(context),
-            child: Row(
-              children: [
-                const Icon(Icons.search_rounded, color: AppColors.primaryBlue),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Search meals...",
-                    style: AppTypography.bodyMd(isDark).copyWith(
-                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF171F33) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search_rounded, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      "Search foods, meals, or dishes...",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                      ),
                     ),
                   ),
-                ),
-                const Icon(Icons.mic_rounded, color: AppColors.lightTextMuted),
-              ],
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.qr_code_scanner_rounded,
+                      size: 18,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.primaryBlue,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
 
-          // Today's Total Calories Header
+          // 4 Grid Action Tiles (Stitch Mockup)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Today",
-                style: AppTypography.headlineMd(isDark),
+              Expanded(
+                child: _buildActionTile(
+                  icon: Icons.restaurant_menu_rounded,
+                  label: "My Meals",
+                  color: AppColors.calorieAccent,
+                  isDark: isDark,
+                  onTap: () => FoodSearchSheet.show(context),
+                ),
               ),
-              Text(
-                "$totalCalories kcal total",
-                style: AppTypography.bodyMd(isDark).copyWith(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionTile(
+                  icon: Icons.star_rounded,
+                  label: "Favorites",
+                  color: Colors.amber,
+                  isDark: isDark,
+                  onTap: () => FoodSearchSheet.show(context),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionTile(
+                  icon: Icons.auto_awesome_rounded,
+                  label: "Quick Add",
+                  color: AppColors.primaryBlue,
+                  isDark: isDark,
+                  onTap: () => FoodSearchSheet.show(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionTile(
+                  icon: Icons.add_rounded,
+                  label: "Custom Dish",
+                  color: AppColors.waterAccent,
+                  isDark: isDark,
+                  onTap: () => AddCustomFoodSheet.show(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
 
-          // Logged Meals List grouped by Meal Categories
+          // Logged Foods Today
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Logged Today",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                ),
+              ),
+              Text(
+                "$totalCalories kcal",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.calorieAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
           mealsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => Center(child: Text("Error: $err")),
             data: (meals) {
               if (meals.isEmpty) {
-                // Initial Default Kerala / South Indian Meal Examples (Matching Stitch Spec)
-                return Column(
-                  children: [
-                    _buildMealSection(
-                      context,
-                      isDark: isDark,
-                      title: "Breakfast",
-                      mealName: "Masala Dosa",
-                      calories: 350,
-                      protein: 8.0,
-                      carbs: 55.0,
-                      fat: 12.0,
+                return GlassContainer(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.lunch_dining_rounded, color: AppColors.darkTextMuted, size: 36),
+                        const SizedBox(height: 8),
+                        Text(
+                          "No meals logged yet today.\nTap Search or Custom Dish to add one.",
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodyMd(isDark),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildMealSection(
-                      context,
-                      isDark: isDark,
-                      title: "Lunch",
-                      mealName: "Kerala Fish Curry & Boiled Rice",
-                      calories: 420,
-                      protein: 24.0,
-                      carbs: 48.0,
-                      fat: 14.0,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMealSection(
-                      context,
-                      isDark: isDark,
-                      title: "Snacks",
-                      mealName: "Pazham Pori (Banana Fritters)",
-                      calories: 180,
-                      protein: 2.5,
-                      carbs: 32.0,
-                      fat: 6.0,
-                    ),
-                  ],
+                  ),
                 );
               }
 
@@ -113,187 +168,115 @@ class FoodScreen extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: meals.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final meal = meals[index];
-                  return SwipeToDeleteRow(
-                    itemKey: ValueKey(meal.id),
-                    title: meal.name,
-                    onDelete: () {
-                      final db = ref.read(appDatabaseProvider);
-                      db.deleteMeal(meal.id);
-                    },
-                    child: GlassContainer(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  return GlassContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.calorieAccent.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.restaurant_rounded, color: AppColors.calorieAccent, size: 20),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  meal.name,
-                                  style: AppTypography.headline(isDark).copyWith(fontSize: 17),
+                              Text(
+                                meal.name,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
                                 ),
                               ),
-                              Row(
-                                children: [
-                                  Text(
-                                    "${meal.calories} kcal",
-                                    style: AppTypography.bodyMd(isDark).copyWith(
-                                      color: AppColors.calorieAccent,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.destructive, size: 20),
-                                    onPressed: () {
-                                      final db = ref.read(appDatabaseProvider);
-                                      db.deleteMeal(meal.id);
-                                    },
-                                  ),
-                                ],
+                              const SizedBox(height: 2),
+                              Text(
+                                "P: ${meal.proteinG?.toStringAsFixed(0) ?? '0'}g • C: ${meal.carbsG?.toStringAsFixed(0) ?? '0'}g • F: ${meal.fatG?.toStringAsFixed(0) ?? '0'}g",
+                                style: AppTypography.footnote(isDark),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.only(top: 8),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                _macroColumn("Protein", "${meal.proteinG ?? 0}g", isDark),
-                                const SizedBox(width: 24),
-                                _macroColumn("Carbs", "${meal.carbsG ?? 0}g", isDark),
-                                const SizedBox(width: 24),
-                                _macroColumn("Fat", "${meal.fatG ?? 0}g", isDark),
-                              ],
-                            ),
+                        ),
+                        Text(
+                          "${meal.calories} kcal",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.calorieAccent,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.destructive, size: 20),
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            final db = ref.read(appDatabaseProvider);
+                            db.deleteMeal(meal.id);
+                          },
+                        ),
+                      ],
                     ),
                   );
                 },
               );
             },
           ),
-          const SizedBox(height: 24),
-
-          // Add Custom Food Glass Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(
-                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              icon: const Icon(Icons.add_rounded, color: AppColors.primaryBlue),
-              label: Text(
-                "Add Custom Food",
-                style: AppTypography.bodyMd(isDark).copyWith(
-                  color: AppColors.primaryBlue,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: () => AddCustomFoodSheet.show(context),
-            ),
-          ),
+          const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  Widget _buildMealSection(
-    BuildContext context, {
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required Color color,
     required bool isDark,
-    required String title,
-    required String mealName,
-    required int calories,
-    required double protein,
-    required double carbs,
-    required double fat,
+    required VoidCallback onTap,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTypography.bodyLg(isDark).copyWith(
-            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-            fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF171F33) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+            width: 1.2,
           ),
         ),
-        const SizedBox(height: 8),
-        GlassContainer(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    mealName,
-                    style: AppTypography.headline(isDark).copyWith(fontSize: 17),
-                  ),
-                  Text(
-                    "$calories kcal",
-                    style: AppTypography.bodyMd(isDark).copyWith(
-                      color: AppColors.calorieAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.only(top: 8),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    _macroColumn("Protein", "${protein}g", isDark),
-                    const SizedBox(width: 24),
-                    _macroColumn("Carbs", "${carbs}g", isDark),
-                    const SizedBox(width: 24),
-                    _macroColumn("Fat", "${fat}g", isDark),
-                  ],
-                ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.lightTextPrimary,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
-
-  Widget _macroColumn(String label, String value, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTypography.labelSm(isDark)),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: AppTypography.bodyMd(isDark).copyWith(fontWeight: FontWeight.w600),
-        ),
-      ],
+      ),
     );
   }
 }

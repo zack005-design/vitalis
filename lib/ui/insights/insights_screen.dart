@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/food/food_providers.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_scaffold.dart';
-import '../design_system/app_typography.dart';
 import '../design_system/glass_container.dart';
 import '../design_system/segmented_control.dart';
 
@@ -27,7 +26,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   }
 
   String _buildInsightText(List<double> calories, List<double> waterMl, double calTarget, double waterTarget) {
-    if (calories.isEmpty) return "Start logging meals and water to see personalized insights here!";
+    if (calories.isEmpty) return "Start logging meals and water to see personalized metabolic insights!";
 
     final avgCal = calories.fold(0.0, (a, b) => a + b) / calories.length;
     final avgWater = waterMl.fold(0.0, (a, b) => a + b) / waterMl.length;
@@ -36,7 +35,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
     final parts = <String>[];
     if (calPct >= 90 && calPct <= 110) {
-      parts.add("Your calorie intake is on target ($calPct% of goal).");
+      parts.add("Your caloric intake is optimal ($calPct% of goal).");
     } else if (calPct < 90) {
       parts.add("You're averaging $calPct% of your calorie goal — try not to skip meals.");
     } else {
@@ -44,10 +43,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     }
 
     if (waterPct >= 100) {
-      parts.add("Great hydration! You're averaging $waterPct% of your water goal.");
+      parts.add("Great hydration! You're averaging $waterPct% of your target.");
     } else {
       final targetL = (waterTarget / 1000).toStringAsFixed(1);
-      parts.add("Hydration needs improvement — averaging $waterPct% of ${targetL}L goal.");
+      parts.add("Hydration averaging $waterPct% of ${targetL}L goal.");
     }
 
     return parts.join(" ");
@@ -63,14 +62,14 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     final targetWater = ref.watch(waterTargetProvider).toDouble();
 
     return AppScaffold(
-      title: "Insights",
+      title: "Metabolic Insights",
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16),
           child: SizedBox(
             width: 150,
             child: SegmentedControl<String>(
-              options: const {'7d': '7d', '30d': '30d', '90d': '90d'},
+              options: const {'7d': '7D', '30d': '30D', '90d': '90D'},
               selectedValue: _selectedRange,
               onValueChanged: (val) => setState(() => _selectedRange = val),
             ),
@@ -80,9 +79,298 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // AI Recovery & Balance Insight Card
+          // Caloric Intake Card (Stitch Spec)
           calorieDataAsync.when(
-            loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+            loading: () => const SizedBox(height: 220, child: Center(child: CircularProgressIndicator())),
+            error: (e, _) => const SizedBox.shrink(),
+            data: (calories) {
+              final avgCal = calories.isEmpty ? 0.0 : calories.fold(0.0, (a, b) => a + b) / calories.length;
+              final maxVal = calories.isEmpty ? 3000.0 : (calories.reduce((a, b) => a > b ? a : b) * 1.25).clamp(1500.0, 5000.0);
+
+              return GlassContainer(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Avg. Caloric Intake",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  avgCal.round().toString(),
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.calorieAccent,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "kcal/day",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.calorieAccent.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.restaurant_rounded, color: AppColors.calorieAccent, size: 20),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Capsule Bar Chart
+                    SizedBox(
+                      height: 160,
+                      child: BarChart(
+                        BarChartData(
+                          maxY: maxVal,
+                          borderData: FlBorderData(show: false),
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                            horizontalInterval: maxVal / 3,
+                            getDrawingHorizontalLine: (_) => FlLine(
+                              color: isDark ? const Color(0x1AFFFFFF) : const Color(0x1A000000),
+                              strokeWidth: 1,
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final idx = value.toInt();
+                                  if (idx >= 0 && idx < calories.length) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        _dayLabel(idx, calories.length),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const Text('');
+                                },
+                              ),
+                            ),
+                          ),
+                          barGroups: calories.asMap().entries.map((e) {
+                            return BarChartGroupData(
+                              x: e.key,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: e.value,
+                                  color: AppColors.calorieAccent,
+                                  width: (280 / (calories.length + 1)).clamp(8.0, 26.0),
+                                  borderRadius: BorderRadius.circular(12),
+                                  backDrawRodData: BackgroundBarChartRodData(
+                                    show: true,
+                                    toY: maxVal * 0.85,
+                                    color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Daily Hydration Line Chart (Stitch Spec)
+          waterDataAsync.when(
+            loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+            error: (e, _) => const SizedBox.shrink(),
+            data: (water) {
+              final avgWater = water.isEmpty ? 0.0 : water.fold(0.0, (a, b) => a + b) / water.length;
+              final maxVal = water.isEmpty ? 3000.0 : (water.reduce((a, b) => a > b ? a : b) * 1.25).clamp(1000.0, 4000.0);
+
+              return GlassContainer(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Daily Hydration",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  (avgWater / 1000).toStringAsFixed(1),
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.waterAccent,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Liters",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.waterAccent.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.water_drop_rounded, color: AppColors.waterAccent, size: 20),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      height: 150,
+                      child: LineChart(
+                        LineChartData(
+                          maxY: maxVal,
+                          borderData: FlBorderData(show: false),
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                            horizontalInterval: maxVal / 3,
+                            getDrawingHorizontalLine: (_) => FlLine(
+                              color: isDark ? const Color(0x1AFFFFFF) : const Color(0x1A000000),
+                              strokeWidth: 1,
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final idx = value.toInt();
+                                  if (idx >= 0 && idx < water.length) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        _dayLabel(idx, water.length),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const Text('');
+                                },
+                              ),
+                            ),
+                          ),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: water.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList(),
+                              isCurved: true,
+                              curveSmoothness: 0.35,
+                              color: AppColors.waterAccent,
+                              barWidth: 3.5,
+                              isStrokeCapRound: true,
+                              dotData: FlDotData(
+                                show: true,
+                                getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                                  radius: 4.5,
+                                  color: AppColors.waterAccent,
+                                  strokeWidth: 2,
+                                  strokeColor: isDark ? const Color(0xFF0B1326) : Colors.white,
+                                ),
+                              ),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    AppColors.waterAccent.withValues(alpha: 0.30),
+                                    AppColors.waterAccent.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Optimal Recovery Window AI Card
+          calorieDataAsync.when(
+            loading: () => const SizedBox.shrink(),
             error: (e, _) => const SizedBox.shrink(),
             data: (calories) => waterDataAsync.when(
               loading: () => const SizedBox.shrink(),
@@ -95,18 +383,21 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
                             color: AppColors.primaryBlue.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryBlue, size: 20),
+                          child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryBlue, size: 18),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            "Weekly Insight Summary",
-                            style: AppTypography.headline(isDark).copyWith(fontSize: 16),
+                        const SizedBox(width: 12),
+                        Text(
+                          "Optimal Recovery Window",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
                           ),
                         ),
                       ],
@@ -114,165 +405,18 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     const SizedBox(height: 12),
                     Text(
                       _buildInsightText(calories, water, targetCal, targetWater),
-                      style: AppTypography.bodyMd(isDark).copyWith(height: 1.5),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(Icons.lightbulb_outline_rounded, size: 16, color: AppColors.warning),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            "Recommendation: Maintain your 2.0L water goal and log meals consistently.",
-                            style: AppTypography.labelSm(isDark).copyWith(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 20),
-
-          Text("Metabolic Trends", style: AppTypography.headlineMd(isDark)),
-          const SizedBox(height: 10),
-
-          // Calorie Trend Graph Card
-          calorieDataAsync.when(
-            loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => const SizedBox.shrink(),
-            data: (calories) {
-              final maxY = calories.isEmpty ? 3000.0 : (calories.reduce((a, b) => a > b ? a : b) * 1.2).clamp(1000.0, 5000.0);
-              final avgCal = calories.isEmpty ? 0.0 : calories.fold(0.0, (a, b) => a + b) / calories.length;
-
-              return GlassContainer(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Calorie Intake (kcal)", style: AppTypography.bodyMd(isDark).copyWith(fontWeight: FontWeight.w600)),
-                        Text("Avg ${avgCal.round()} kcal", style: AppTypography.labelSm(isDark).copyWith(color: AppColors.calorieAccent)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 150,
-                      child: BarChart(
-                        BarChartData(
-                          maxY: maxY,
-                          borderData: FlBorderData(show: false),
-                          gridData: const FlGridData(show: false),
-                          titlesData: FlTitlesData(
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  final idx = value.toInt();
-                                  if (idx >= 0 && idx < calories.length) {
-                                    return Text(_dayLabel(idx, calories.length), style: AppTypography.labelSm(isDark));
-                                  }
-                                  return const Text('');
-                                },
-                              ),
-                            ),
-                          ),
-                          barGroups: calories.asMap().entries.map((e) => BarChartGroupData(
-                            x: e.key,
-                            barRods: [BarChartRodData(
-                              toY: e.value,
-                              color: AppColors.calorieAccent,
-                              width: (300 / (calories.length + 1)).clamp(6.0, 22.0),
-                              borderRadius: BorderRadius.circular(6),
-                            )],
-                          )).toList(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Hydration Trend Graph Card
-          waterDataAsync.when(
-            loading: () => const SizedBox(height: 180, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => const SizedBox.shrink(),
-            data: (water) {
-              final maxY = water.isEmpty ? 3000.0 : (water.reduce((a, b) => a > b ? a : b) * 1.2).clamp(500.0, 4000.0);
-              final avgWater = water.isEmpty ? 0.0 : water.fold(0.0, (a, b) => a + b) / water.length;
-
-              return GlassContainer(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Hydration (ml)", style: AppTypography.bodyMd(isDark).copyWith(fontWeight: FontWeight.w600)),
-                        Text("Avg ${avgWater.round()} ml", style: AppTypography.labelSm(isDark).copyWith(color: AppColors.waterAccent)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 140,
-                      child: water.every((v) => v == 0)
-                          ? Center(child: Text("No water data yet", style: AppTypography.bodyMd(isDark)))
-                          : LineChart(
-                              LineChartData(
-                                maxY: maxY,
-                                borderData: FlBorderData(show: false),
-                                gridData: const FlGridData(show: false),
-                                titlesData: FlTitlesData(
-                                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget: (value, meta) {
-                                        final idx = value.toInt();
-                                        if (idx >= 0 && idx < water.length) {
-                                          return Text(_dayLabel(idx, water.length), style: AppTypography.labelSm(isDark));
-                                        }
-                                        return const Text('');
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                lineBarsData: [
-                                  LineChartBarData(
-                                    spots: water.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList(),
-                                    isCurved: true,
-                                    color: AppColors.waterAccent,
-                                    barWidth: 3,
-                                    isStrokeCapRound: true,
-                                    dotData: const FlDotData(show: true),
-                                    belowBarData: BarAreaData(show: true, color: AppColors.waterAccent.withValues(alpha: 0.15)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 60),
+          const SizedBox(height: 80),
         ],
       ),
     );

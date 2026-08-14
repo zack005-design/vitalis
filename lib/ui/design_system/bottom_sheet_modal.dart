@@ -54,7 +54,7 @@ class BottomSheetModal extends StatelessWidget {
             constraints: BoxConstraints(maxHeight: maxHeight),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFA1C1C1E) : const Color(0xFDF2F2F7),
+              color: isDark ? const Color(0xF50B1326) : const Color(0xFDF2F2F7),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border.all(
                 color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,

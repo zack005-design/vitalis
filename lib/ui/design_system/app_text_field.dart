@@ -29,7 +29,7 @@ class AppTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final bg = isDark ? const Color(0xFF1C1C1E) : const Color(0xFFEFEFF4);
+    final bg = isDark ? const Color(0xFF171F33) : const Color(0xFFEFEFF4);
     final border = isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder;
 
     return Column(

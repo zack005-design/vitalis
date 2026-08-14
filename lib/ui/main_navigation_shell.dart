@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'design_system/app_colors.dart';
 import 'today/today_screen.dart';
-import 'food/food_screen.dart';
 import 'sleep/sleep_screen.dart';
 import 'insights/insights_screen.dart';
+import 'food/food_screen.dart';
 import 'more/more_screen.dart';
 
 class MainNavigationShell extends StatefulWidget {
@@ -20,9 +20,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   final List<Widget> _screens = const [
     TodayScreen(),
-    FoodScreen(),
     SleepScreen(),
     InsightsScreen(),
+    FoodScreen(),
     MoreScreen(),
   ];
 
@@ -32,34 +32,45 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     return Scaffold(
       extendBody: true,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(40),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: Container(
-              height: 72,
+              height: 68,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkGlassSurface : AppColors.lightGlassSurface,
-                borderRadius: BorderRadius.circular(28),
+                color: isDark
+                    ? const Color(0xE60B1326) // Deep midnight glass
+                    : const Color(0xEBFFFFFF),
+                borderRadius: BorderRadius.circular(40),
                 border: Border.all(
                   color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                  width: 1,
+                  width: 1.2,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _navItem(0, Icons.home_rounded, "Today"),
-                  _navItem(1, Icons.restaurant_rounded, "Food"),
-                  _navItem(2, Icons.bedtime_rounded, "Sleep"),
-                  _navItem(3, Icons.analytics_rounded, "Insights"),
-                  _navItem(4, Icons.more_horiz_rounded, "More"),
+                  _navItem(0, Icons.grid_view_rounded, isDark),
+                  _navItem(1, Icons.nightlight_round, isDark),
+                  _navItem(2, Icons.insights_rounded, isDark),
+                  _navItem(3, Icons.restaurant_rounded, isDark),
+                  _navItem(4, Icons.person_rounded, isDark),
                 ],
               ),
             ),
@@ -69,12 +80,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     );
   }
 
-  Widget _navItem(int index, IconData icon, String label) {
+  Widget _navItem(int index, IconData icon, bool isDark) {
     final isSelected = _currentIndex == index;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final selectedColor = AppColors.primaryBlue;
-    final unselectedColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final activeBg = isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0);
+    final activeIconColor = isDark ? Colors.white : AppColors.primaryBlue;
+    final inactiveIconColor = isDark ? const Color(0xFF8E909A) : const Color(0xFF717786);
 
     return GestureDetector(
       onTap: () {
@@ -87,32 +97,29 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        width: isSelected ? 52 : 44,
+        height: isSelected ? 52 : 44,
         decoration: BoxDecoration(
-          color: isSelected
-              ? selectedColor.withValues(alpha: 0.12)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? activeBg : Colors.transparent,
+          shape: BoxShape.circle,
+          boxShadow: isSelected && isDark
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: isSelected ? selectedColor : unselectedColor,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? selectedColor : unselectedColor,
-              ),
-            ),
-          ],
+        child: Center(
+          child: Icon(
+            icon,
+            size: isSelected ? 24 : 22,
+            color: isSelected ? activeIconColor : inactiveIconColor,
+          ),
         ),
       ),
     );
