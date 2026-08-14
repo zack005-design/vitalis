@@ -286,16 +286,24 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                     final messenger = ScaffoldMessenger.of(context);
                     final client = HealthConnectClient();
                     final granted = await client.requestPermissions();
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          granted
-                              ? 'Health Connect permissions granted successfully!'
-                              : 'Please ensure Google Health Connect app is installed & granted on Android.',
+                    if (granted) {
+                      final db = ref.read(appDatabaseProvider);
+                      await client.syncFromHealthConnect(db);
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Connected to Google Health Connect! Two-way sync complete.'),
+                          behavior: SnackBarBehavior.floating,
                         ),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                      );
+                    } else {
+                      await client.installHealthConnect();
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Please grant Health Connect permissions in Android Settings.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
                   },
                 ),
                 _buildDivider(isDark),

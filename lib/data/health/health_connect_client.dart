@@ -1,7 +1,10 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:health/health.dart';
+import '../local/app_database.dart';
 
 class HealthConnectClient {
   final Health _health;
+  bool _configured = false;
 
   HealthConnectClient({Health? health}) : _health = health ?? Health();
 
@@ -12,22 +15,46 @@ class HealthConnectClient {
     HealthDataType.STEPS,
   ];
 
+  static const List<HealthDataAccess> _permissions = [
+    HealthDataAccess.READ_WRITE,
+    HealthDataAccess.READ_WRITE,
+    HealthDataAccess.READ_WRITE,
+    HealthDataAccess.READ_WRITE,
+  ];
+
+  Future<void> _ensureConfigured() async {
+    if (!_configured) {
+      await _health.configure();
+      _configured = true;
+    }
+  }
+
   /// Request Health Connect permissions on Android
   Future<bool> requestPermissions() async {
     try {
-      final hasPermission = await _health.hasPermissions(_dataTypes);
+      await _ensureConfigured();
+      final hasPermission = await _health.hasPermissions(_dataTypes, permissions: _permissions);
       if (hasPermission == true) return true;
 
-      return await _health.requestAuthorization(_dataTypes);
+      final granted = await _health.requestAuthorization(_dataTypes, permissions: _permissions);
+      return granted;
     } catch (_) {
       return false;
     }
   }
 
+  /// Check if Health Connect is installed or prompt install
+  Future<void> installHealthConnect() async {
+    try {
+      await _health.installHealthConnect();
+    } catch (_) {}
+  }
+
   /// Fetch last night's sleep sessions
   Future<List<HealthDataPoint>> fetchSleepSessions(DateTime now) async {
-    final start = now.subtract(const Duration(hours: 24));
     try {
+      await _ensureConfigured();
+      final start = now.subtract(const Duration(hours: 24));
       final points = await _health.getHealthDataFromTypes(
         startTime: start,
         endTime: now,
@@ -41,8 +68,9 @@ class HealthConnectClient {
 
   /// Fetch total hydration logged in Health Connect today (in ml)
   Future<int> fetchTodayWaterMl(DateTime now) async {
-    final start = DateTime(now.year, now.month, now.day);
     try {
+      await _ensureConfigured();
+      final start = DateTime(now.year, now.month, now.day);
       final points = await _health.getHealthDataFromTypes(
         startTime: start,
         endTime: now,
@@ -63,6 +91,7 @@ class HealthConnectClient {
   /// Write water log to Health Connect
   Future<bool> writeWaterLog(int amountMl, DateTime timestamp) async {
     try {
+      await _ensureConfigured();
       return await _health.writeHealthData(
         value: (amountMl / 1000.0),
         type: HealthDataType.WATER,
@@ -78,6 +107,7 @@ class HealthConnectClient {
   /// Write sleep session to Health Connect
   Future<bool> writeSleepSession({required DateTime start, required DateTime end}) async {
     try {
+      await _ensureConfigured();
       final durationHours = end.difference(start).inMinutes / 60.0;
       return await _health.writeHealthData(
         value: durationHours,
@@ -100,6 +130,7 @@ class HealthConnectClient {
     required DateTime timestamp,
   }) async {
     try {
+      await _ensureConfigured();
       return await _health.writeHealthData(
         value: calories.toDouble(),
         type: HealthDataType.NUTRITION,
@@ -110,5 +141,37 @@ class HealthConnectClient {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Two-way sync: Pulls external data from Health Connect into local database
+  Future<void> syncFromHealthConnect(AppDatabase db) async {
+    try {
+      await _ensureConfigured();
+      final now = DateTime.now();
+
+      // 1. Sync external sleep
+      final sleepPoints = await fetchSleepSessions(now);
+      for (final p in sleepPoints) {
+        final durationMin = p.dateTo.difference(p.dateFrom).inMinutes;
+        if (durationMin > 0) {
+          final existing = await db.getSleepNotesForDateRange(
+            p.dateFrom.subtract(const Duration(hours: 1)),
+            p.dateTo.add(const Duration(hours: 1)),
+          );
+          if (existing.isEmpty) {
+            await db.insertSleepNote(
+              SleepNotesCompanion(
+                date: drift.Value(p.dateFrom),
+                bedtime: drift.Value(p.dateFrom),
+                wakeTime: drift.Value(p.dateTo),
+                durationMinutes: drift.Value(durationMin),
+                noteText: const drift.Value("Synced from Google Health"),
+                createdAt: drift.Value(now),
+              ),
+            );
+          }
+        }
+      }
+    } catch (_) {}
   }
 }

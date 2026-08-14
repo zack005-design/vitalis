@@ -93,6 +93,13 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  Future<List<SleepNote>> getSleepNotesForDateRange(DateTime start, DateTime end) {
+    return (select(sleepNotes)
+          ..where((tbl) => tbl.date.isBiggerOrEqualValue(start))
+          ..where((tbl) => tbl.date.isSmallerThanValue(end)))
+        .get();
+  }
+
   Future<int> insertSleepNote(SleepNotesCompanion note) => into(sleepNotes).insert(note);
 
   // Custom Foods DAOs
