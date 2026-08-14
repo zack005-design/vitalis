@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/local/app_database.dart';
 import '../../data/food/food_search_repository.dart';
+import '../insights/tier_a_rule_engine.dart';
+import '../insights/tier_b_balance_scorer.dart';
+import '../insights/tier_c_gemini_narrator.dart';
 
 // Database Singleton Provider
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -22,13 +25,13 @@ final todayMealsProvider = StreamProvider<List<Meal>>((ref) {
   return db.watchTodayMeals(DateTime.now());
 });
 
-// Custom Foods Stream Provider
-final customFoodsProvider = StreamProvider<List<CustomFood>>((ref) {
+// Today Water Logs Stream Provider
+final todayWaterLogsProvider = StreamProvider<List<WaterLog>>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return db.watchCustomFoods();
+  return db.watchTodayWaterLogs(DateTime.now());
 });
 
-// Total Logged Calories Today Provider
+// Total Calories Logged Today
 final totalCaloriesTodayProvider = Provider<int>((ref) {
   final mealsAsync = ref.watch(todayMealsProvider);
   return mealsAsync.maybeWhen(
@@ -37,23 +40,7 @@ final totalCaloriesTodayProvider = Provider<int>((ref) {
   );
 });
 
-// Food Search Query State Provider
-final foodSearchQueryProvider = StateProvider<String>((ref) => '');
-
-// Food Search Results Future Provider
-final foodSearchResultsProvider = FutureProvider<List<FoodSearchResult>>((ref) async {
-  final query = ref.watch(foodSearchQueryProvider);
-  final repo = ref.watch(foodSearchRepositoryProvider);
-  return repo.search(query);
-});
-
-// Today Water Logs Stream Provider
-final todayWaterLogsProvider = StreamProvider<List<WaterLog>>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return db.watchTodayWaterLogs(DateTime.now());
-});
-
-// Total Logged Water Today Provider (in ml)
+// Total Water Logged Today (in ml)
 final totalWaterMlTodayProvider = Provider<int>((ref) {
   final waterLogsAsync = ref.watch(todayWaterLogsProvider);
   return waterLogsAsync.maybeWhen(
@@ -62,10 +49,20 @@ final totalWaterMlTodayProvider = Provider<int>((ref) {
   );
 });
 
-// Sleep Logs Stream Provider (last 30 entries)
+// Food Search Query State Provider
+final foodSearchQueryProvider = StateProvider<String>((ref) => '');
+
+// Food Search Results Provider
+final foodSearchResultsProvider = FutureProvider<List<FoodSearchResult>>((ref) async {
+  final query = ref.watch(foodSearchQueryProvider);
+  final repo = ref.watch(foodSearchRepositoryProvider);
+  return repo.search(query);
+});
+
+// Sleep Logs Stream Provider
 final sleepLogsProvider = StreamProvider<List<SleepNote>>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return db.watchLastNSleepNotes(30);
+  return db.watchSleepNotes();
 });
 
 // Last sleep entry (most recent)
@@ -152,4 +149,40 @@ class WaterTargetNotifier extends StateNotifier<int> {
 
 final waterTargetProvider = StateNotifierProvider<WaterTargetNotifier, int>((ref) {
   return WaterTargetNotifier();
+});
+
+// Tier B Daily Balance Score Provider
+final dailyBalanceScoreProvider = Provider<int>((ref) {
+  final caloriesLogged = ref.watch(totalCaloriesTodayProvider);
+  final calorieTarget = ref.watch(calorieTargetProvider);
+  final waterLogged = ref.watch(totalWaterMlTodayProvider);
+  final waterTarget = ref.watch(waterTargetProvider);
+  final lastSleep = ref.watch(lastSleepEntryProvider);
+  final sleepHours = lastSleep != null ? lastSleep.durationMinutes / 60.0 : 8.0;
+
+  return TierBBalanceScorer().calculateScore(
+    caloriesLogged: caloriesLogged,
+    calorieTarget: calorieTarget,
+    waterMlLogged: waterLogged,
+    waterTargetMl: waterTarget,
+    sleepHours: sleepHours,
+  );
+});
+
+// Tier A / C Daily Health Insight Provider
+final dailyHealthInsightProvider = FutureProvider<HealthSummaryInsight>((ref) async {
+  final caloriesLogged = ref.watch(totalCaloriesTodayProvider);
+  final calorieTarget = ref.watch(calorieTargetProvider);
+  final waterLogged = ref.watch(totalWaterMlTodayProvider);
+  final waterTarget = ref.watch(waterTargetProvider);
+  final lastSleep = ref.watch(lastSleepEntryProvider);
+  final sleepHours = lastSleep != null ? lastSleep.durationMinutes / 60.0 : 8.0;
+
+  return TierCGeminiNarrator().generateNarration(
+    caloriesLogged: caloriesLogged,
+    calorieTarget: calorieTarget,
+    waterLoggedMl: waterLogged,
+    waterTargetMl: waterTarget,
+    sleepHours: sleepHours,
+  );
 });

@@ -74,13 +74,7 @@ class TodayScreen extends ConsumerWidget {
     final targetCarbs = ((targetCalories * 0.45) / 4).roundToDouble();
     final targetFat = ((targetCalories * 0.25) / 9).roundToDouble();
 
-    // Balance score calculation
-    final calRatio = (totalCaloriesLogged / targetCalories.toDouble()).clamp(0.0, 1.0);
-    final wRatio = (totalWaterLogged / targetWaterMl.toDouble()).clamp(0.0, 1.0);
-    final sleepRatio = lastSleep != null
-        ? (lastSleep.durationMinutes / 480.0).clamp(0.0, 1.0)
-        : 0.5;
-    final balanceScore = ((calRatio * 0.4 + wRatio * 0.4 + sleepRatio * 0.2) * 100).round();
+    final balanceScore = ref.watch(dailyBalanceScoreProvider);
 
     final dateFormatted = DateFormat('EEEE, MMM d').format(DateTime.now());
 

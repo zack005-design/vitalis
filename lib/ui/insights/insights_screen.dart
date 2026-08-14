@@ -25,41 +25,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     }
   }
 
-  String _buildInsightText(List<double> calories, List<double> waterMl, double calTarget, double waterTarget) {
-    if (calories.isEmpty) return "Start logging meals and water to see personalized metabolic insights!";
-
-    final avgCal = calories.fold(0.0, (a, b) => a + b) / calories.length;
-    final avgWater = waterMl.fold(0.0, (a, b) => a + b) / waterMl.length;
-    final calPct = (avgCal / calTarget * 100).round();
-    final waterPct = (avgWater / waterTarget * 100).round();
-
-    final parts = <String>[];
-    if (calPct >= 90 && calPct <= 110) {
-      parts.add("Your caloric intake is optimal ($calPct% of goal).");
-    } else if (calPct < 90) {
-      parts.add("You're averaging $calPct% of your calorie goal — try not to skip meals.");
-    } else {
-      parts.add("Calorie intake is ${calPct - 100}% above target — consider smaller portions.");
-    }
-
-    if (waterPct >= 100) {
-      parts.add("Great hydration! You're averaging $waterPct% of your target.");
-    } else {
-      final targetL = (waterTarget / 1000).toStringAsFixed(1);
-      parts.add("Hydration averaging $waterPct% of ${targetL}L goal.");
-    }
-
-    return parts.join(" ");
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final calorieDataAsync = ref.watch(calorieHistoryProvider(_days));
     final waterDataAsync = ref.watch(waterHistoryProvider(_days));
-    final targetCal = ref.watch(calorieTargetProvider).toDouble();
-    final targetWater = ref.watch(waterTargetProvider).toDouble();
 
     return AppScaffold(
       title: "Metabolic Insights",
@@ -369,50 +340,72 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           const SizedBox(height: 16),
 
           // Optimal Recovery Window AI Card
-          calorieDataAsync.when(
+          ref.watch(dailyHealthInsightProvider).when(
             loading: () => const SizedBox.shrink(),
             error: (e, _) => const SizedBox.shrink(),
-            data: (calories) => waterDataAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (e, _) => const SizedBox.shrink(),
-              data: (water) => GlassContainer(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryBlue, size: 18),
+            data: (insight) => GlassContainer(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          "Optimal Recovery Window",
+                        child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primaryBlue, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          insight.title,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: isDark ? Colors.white : AppColors.lightTextPrimary,
                           ),
                         ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    insight.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.tips_and_updates_rounded, size: 16, color: AppColors.calorieAccent),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            insight.recommendation,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _buildInsightText(calories, water, targetCal, targetWater),
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
