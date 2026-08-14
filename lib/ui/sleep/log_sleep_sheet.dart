@@ -27,7 +27,6 @@ class LogSleepSheet extends ConsumerStatefulWidget {
 class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
   TimeOfDay _bedtime = const TimeOfDay(hour: 22, minute: 30);
   TimeOfDay _wakeTime = const TimeOfDay(hour: 6, minute: 30);
-  int _qualityRating = 4;
   final _noteController = TextEditingController();
   bool _isSaving = false;
 
@@ -77,7 +76,6 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
           bedtime: drift.Value(bed),
           wakeTime: drift.Value(wake),
           durationMinutes: drift.Value(_durationMinutes),
-          ratingStars: drift.Value(_qualityRating),
           noteText: drift.Value(_noteController.text.trim()),
           createdAt: drift.Value(now),
         ),
@@ -156,27 +154,6 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 20),
-
-        // Quality Rating Stars
-        Text("Sleep Quality", style: AppTypography.subhead(isDark).copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 10),
-        Row(
-          children: List.generate(5, (index) {
-            final star = index + 1;
-            return GestureDetector(
-              onTap: () => setState(() => _qualityRating = star),
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Icon(
-                  star <= _qualityRating ? Icons.star_rounded : Icons.star_outline_rounded,
-                  color: star <= _qualityRating ? Colors.amber : Colors.grey.shade400,
-                  size: 34,
-                ),
-              ),
-            );
-          }),
         ),
         const SizedBox(height: 20),
 

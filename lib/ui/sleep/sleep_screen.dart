@@ -174,14 +174,6 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                       isDark,
                     ),
                   ],
-                  const Divider(height: 24),
-                  _buildStageRow(
-                    "Quality Rating",
-                    '⭐' * lastEntry.ratingStars,
-                    "${lastEntry.ratingStars}/5",
-                    Colors.amber,
-                    isDark,
-                  ),
                   if (lastEntry.noteText.isNotEmpty) ...[
                     const Divider(height: 24),
                     _buildStageRow(

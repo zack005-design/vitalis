@@ -48,7 +48,6 @@ class TodayScreen extends ConsumerWidget {
     final totalCaloriesLogged = ref.watch(totalCaloriesTodayProvider);
     final totalWaterLogged = ref.watch(totalWaterMlTodayProvider);
     final mealsAsync = ref.watch(todayMealsProvider);
-    final streakAsync = ref.watch(streakProvider);
     final lastSleep = ref.watch(lastSleepEntryProvider);
     final targetCalories = ref.watch(calorieTargetProvider);
     final targetWaterMl = ref.watch(waterTargetProvider);
@@ -72,46 +71,6 @@ class TodayScreen extends ConsumerWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Streak & Vitality Banner Badge
-          streakAsync.when(
-            loading: () => const SizedBox.shrink(),
-            error: (e, _) => const SizedBox.shrink(),
-            data: (streak) => GlassContainer(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.calorieAccent.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Text("🔥", style: TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          streak > 0 ? "$streak-Day Vitality Streak!" : "Start Your Streak Today!",
-                          style: AppTypography.subhead(isDark).copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          streak > 0
-                              ? "Keep logging to maintain your momentum."
-                              : "Log your first meal to begin your streak.",
-                          style: AppTypography.footnote(isDark),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Bento Concentric Rings Card (Calories + Water Dual Ring)
           BentoConcentricRings(
             calorieProgress: calorieRatio,
@@ -147,7 +106,7 @@ class TodayScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            lastSleep.ratingStars >= 4 ? "Great quality" : lastSleep.ratingStars == 3 ? "Moderate quality" : "Poor quality",
+                            "Last recorded session",
                             style: AppTypography.footnote(isDark),
                           ),
                         ]

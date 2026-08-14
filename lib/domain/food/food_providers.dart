@@ -110,24 +110,6 @@ final waterHistoryProvider = FutureProvider.family<List<double>, int>((ref, days
   return result;
 });
 
-// Streak counter: consecutive days with ≥1 meal logged
-final streakProvider = FutureProvider<int>((ref) async {
-  final db = ref.watch(appDatabaseProvider);
-  final now = DateTime.now();
-  int streak = 0;
-  for (int i = 0; i <= 365; i++) {
-    final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dayEnd = dayStart.add(const Duration(days: 1));
-    final mealList = await db.getMealsForDateRange(dayStart, dayEnd);
-    if (mealList.isNotEmpty) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  return streak;
-});
-
 // Dynamic User Calorie Target Provider (Mifflin-St Jeor / Profile-linked)
 class CalorieTargetNotifier extends StateNotifier<int> {
   CalorieTargetNotifier() : super(2200) {
