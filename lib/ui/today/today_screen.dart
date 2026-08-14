@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/health/health_connect_client.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/food/food_providers.dart';
 import '../design_system/app_button.dart';
@@ -17,18 +18,27 @@ class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
   Future<void> _quickAddWater(WidgetRef ref, int amountMl) async {
+    final now = DateTime.now();
     final db = ref.read(appDatabaseProvider);
     await db.insertWaterLog(
       WaterLogsCompanion(
         amountMl: drift.Value(amountMl),
-        timestamp: drift.Value(DateTime.now()),
+        timestamp: drift.Value(now),
       ),
     );
+    // Background sync to Health Connect
+    HealthConnectClient().writeWaterLog(amountMl, now).ignore();
   }
 
   Future<void> _deleteMeal(WidgetRef ref, int id) async {
     final db = ref.read(appDatabaseProvider);
     await db.deleteMeal(id);
+  }
+
+  String _formatDuration(int minutes) {
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return h > 0 ? '${h}h ${m}m' : '${m}m';
   }
 
   @override
@@ -38,9 +48,10 @@ class TodayScreen extends ConsumerWidget {
     final totalCaloriesLogged = ref.watch(totalCaloriesTodayProvider);
     final totalWaterLogged = ref.watch(totalWaterMlTodayProvider);
     final mealsAsync = ref.watch(todayMealsProvider);
-
-    const targetCalories = 2200;
-    const targetWaterMl = 2000;
+    final streakAsync = ref.watch(streakProvider);
+    final lastSleep = ref.watch(lastSleepEntryProvider);
+    final targetCalories = ref.watch(calorieTargetProvider);
+    final targetWaterMl = ref.watch(waterTargetProvider);
 
     final calorieRatio = (totalCaloriesLogged / targetCalories).clamp(0.0, 1.0);
     final waterRatio = (totalWaterLogged / targetWaterMl).clamp(0.0, 1.0);
@@ -62,62 +73,52 @@ class TodayScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Streak & Vitality Banner Badge
-          GlassContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.calorieAccent.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+          streakAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox.shrink(),
+            data: (streak) => GlassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.calorieAccent.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Text("🔥", style: TextStyle(fontSize: 18)),
                   ),
-                  child: const Text("🔥", style: TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "4-Day Vitality Streak!",
-                        style: AppTypography.subhead(isDark).copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        "Consistent logging boosts energy balance prediction accuracy.",
-                        style: AppTypography.footnote(isDark),
-                      ),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          streak > 0 ? "$streak-Day Vitality Streak!" : "Start Your Streak Today!",
+                          style: AppTypography.subhead(isDark).copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          streak > 0
+                              ? "Keep logging to maintain your momentum."
+                              : "Log your first meal to begin your streak.",
+                          style: AppTypography.footnote(isDark),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
 
           // Bento Concentric Rings Card (Calories + Water Dual Ring)
-          GlassContainer(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                BentoConcentricRings(
-                  calorieProgress: calorieRatio,
-                  waterProgress: waterRatio,
-                  caloriesLogged: totalCaloriesLogged,
-                  waterMlLogged: totalWaterLogged,
-                  waterTargetMl: targetWaterMl,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _legendItem("Calories", "${(calorieRatio * 100).toInt()}%", AppColors.calorieAccent, isDark),
-                    const SizedBox(width: 32),
-                    _legendItem("Water", "${(totalWaterLogged / 1000).toStringAsFixed(1)}L", AppColors.waterAccent, isDark),
-                  ],
-                ),
-              ],
-            ),
+          BentoConcentricRings(
+            calorieProgress: calorieRatio,
+            waterProgress: waterRatio,
+            caloriesLogged: totalCaloriesLogged,
+            waterMlLogged: totalWaterLogged,
+            waterTargetMl: targetWaterMl,
           ),
           const SizedBox(height: 16),
 
@@ -138,17 +139,20 @@ class TodayScreen extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        "7h 24m",
-                        style: AppTypography.title2(isDark).copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Light sleep optimal",
-                        style: AppTypography.footnote(isDark),
-                      ),
+                      if (lastSleep != null) ...
+                        [
+                          Text(
+                            _formatDuration(lastSleep.durationMinutes),
+                            style: AppTypography.title2(isDark).copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            lastSleep.ratingStars >= 4 ? "Great quality" : lastSleep.ratingStars == 3 ? "Moderate quality" : "Poor quality",
+                            style: AppTypography.footnote(isDark),
+                          ),
+                        ]
+                      else
+                        Text("No sleep logged", style: AppTypography.footnote(isDark)),
                     ],
                   ),
                 ),
@@ -157,31 +161,42 @@ class TodayScreen extends ConsumerWidget {
               Expanded(
                 child: GlassContainer(
                   padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.balance_rounded, color: AppColors.primaryBlue, size: 20),
-                          const SizedBox(width: 8),
-                          Text("Balance Score", style: AppTypography.subhead(isDark)),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "88 /100",
-                        style: AppTypography.title2(isDark).copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryBlue,
+                  child: Builder(builder: (context) {
+                    final targetCal = targetCalories.toDouble();
+                    final targetWater = targetWaterMl.toDouble();
+                    const targetSleep = 480.0;
+                    final calRatio = (totalCaloriesLogged / targetCal).clamp(0.0, 1.0);
+                    final waterRatio = (totalWaterLogged / targetWater).clamp(0.0, 1.0);
+                    final sleepRatio = lastSleep != null
+                        ? (lastSleep.durationMinutes / targetSleep).clamp(0.0, 1.0)
+                        : 0.5;
+                    final score = ((calRatio * 0.4 + waterRatio * 0.4 + sleepRatio * 0.2) * 100).round();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.balance_rounded, color: AppColors.primaryBlue, size: 20),
+                            const SizedBox(width: 8),
+                            Text("Balance Score", style: AppTypography.subhead(isDark)),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Hydration balance high",
-                        style: AppTypography.footnote(isDark),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "$score /100",
+                          style: AppTypography.title2(isDark).copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          score >= 80 ? "Excellent balance" : score >= 60 ? "Good progress" : "Keep improving",
+                          style: AppTypography.footnote(isDark),
+                        ),
+                      ],
+                    );
+                  }),
                 ),
               ),
             ],
@@ -347,25 +362,6 @@ class TodayScreen extends ConsumerWidget {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _legendItem(String label, String value, Color color, bool isDark) {
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          "$label ($value)",
-          style: AppTypography.footnote(isDark).copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 

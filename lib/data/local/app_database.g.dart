@@ -1133,6 +1133,40 @@ class $SleepNotesTable extends SleepNotes
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _bedtimeMeta = const VerificationMeta(
+    'bedtime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> bedtime = GeneratedColumn<DateTime>(
+    'bedtime',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _wakeTimeMeta = const VerificationMeta(
+    'wakeTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> wakeTime = GeneratedColumn<DateTime>(
+    'wake_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMinutesMeta = const VerificationMeta(
+    'durationMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> durationMinutes = GeneratedColumn<int>(
+    'duration_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _ratingStarsMeta = const VerificationMeta(
     'ratingStars',
   );
@@ -1154,7 +1188,8 @@ class $SleepNotesTable extends SleepNotes
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -1171,6 +1206,9 @@ class $SleepNotesTable extends SleepNotes
   List<GeneratedColumn> get $columns => [
     id,
     date,
+    bedtime,
+    wakeTime,
+    durationMinutes,
     ratingStars,
     noteText,
     createdAt,
@@ -1198,6 +1236,27 @@ class $SleepNotesTable extends SleepNotes
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
+    if (data.containsKey('bedtime')) {
+      context.handle(
+        _bedtimeMeta,
+        bedtime.isAcceptableOrUnknown(data['bedtime']!, _bedtimeMeta),
+      );
+    }
+    if (data.containsKey('wake_time')) {
+      context.handle(
+        _wakeTimeMeta,
+        wakeTime.isAcceptableOrUnknown(data['wake_time']!, _wakeTimeMeta),
+      );
+    }
+    if (data.containsKey('duration_minutes')) {
+      context.handle(
+        _durationMinutesMeta,
+        durationMinutes.isAcceptableOrUnknown(
+          data['duration_minutes']!,
+          _durationMinutesMeta,
+        ),
+      );
+    }
     if (data.containsKey('rating_stars')) {
       context.handle(
         _ratingStarsMeta,
@@ -1212,8 +1271,6 @@ class $SleepNotesTable extends SleepNotes
         _noteTextMeta,
         noteText.isAcceptableOrUnknown(data['note_text']!, _noteTextMeta),
       );
-    } else if (isInserting) {
-      context.missing(_noteTextMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -1240,6 +1297,18 @@ class $SleepNotesTable extends SleepNotes
         DriftSqlType.dateTime,
         data['${effectivePrefix}date'],
       )!,
+      bedtime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}bedtime'],
+      ),
+      wakeTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}wake_time'],
+      ),
+      durationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_minutes'],
+      )!,
       ratingStars: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}rating_stars'],
@@ -1263,13 +1332,31 @@ class $SleepNotesTable extends SleepNotes
 
 class SleepNote extends DataClass implements Insertable<SleepNote> {
   final int id;
+
+  /// Date of the sleep session (night started)
   final DateTime date;
+
+  /// Bedtime (when user went to sleep)
+  final DateTime? bedtime;
+
+  /// Wake time
+  final DateTime? wakeTime;
+
+  /// Total sleep duration in minutes
+  final int durationMinutes;
+
+  /// Quality rating 1-5 stars
   final int ratingStars;
+
+  /// Optional free-text note
   final String noteText;
   final DateTime createdAt;
   const SleepNote({
     required this.id,
     required this.date,
+    this.bedtime,
+    this.wakeTime,
+    required this.durationMinutes,
     required this.ratingStars,
     required this.noteText,
     required this.createdAt,
@@ -1279,6 +1366,13 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['date'] = Variable<DateTime>(date);
+    if (!nullToAbsent || bedtime != null) {
+      map['bedtime'] = Variable<DateTime>(bedtime);
+    }
+    if (!nullToAbsent || wakeTime != null) {
+      map['wake_time'] = Variable<DateTime>(wakeTime);
+    }
+    map['duration_minutes'] = Variable<int>(durationMinutes);
     map['rating_stars'] = Variable<int>(ratingStars);
     map['note_text'] = Variable<String>(noteText);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -1289,6 +1383,13 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
     return SleepNotesCompanion(
       id: Value(id),
       date: Value(date),
+      bedtime: bedtime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bedtime),
+      wakeTime: wakeTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wakeTime),
+      durationMinutes: Value(durationMinutes),
       ratingStars: Value(ratingStars),
       noteText: Value(noteText),
       createdAt: Value(createdAt),
@@ -1303,6 +1404,9 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
     return SleepNote(
       id: serializer.fromJson<int>(json['id']),
       date: serializer.fromJson<DateTime>(json['date']),
+      bedtime: serializer.fromJson<DateTime?>(json['bedtime']),
+      wakeTime: serializer.fromJson<DateTime?>(json['wakeTime']),
+      durationMinutes: serializer.fromJson<int>(json['durationMinutes']),
       ratingStars: serializer.fromJson<int>(json['ratingStars']),
       noteText: serializer.fromJson<String>(json['noteText']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -1314,6 +1418,9 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'date': serializer.toJson<DateTime>(date),
+      'bedtime': serializer.toJson<DateTime?>(bedtime),
+      'wakeTime': serializer.toJson<DateTime?>(wakeTime),
+      'durationMinutes': serializer.toJson<int>(durationMinutes),
       'ratingStars': serializer.toJson<int>(ratingStars),
       'noteText': serializer.toJson<String>(noteText),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -1323,12 +1430,18 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
   SleepNote copyWith({
     int? id,
     DateTime? date,
+    Value<DateTime?> bedtime = const Value.absent(),
+    Value<DateTime?> wakeTime = const Value.absent(),
+    int? durationMinutes,
     int? ratingStars,
     String? noteText,
     DateTime? createdAt,
   }) => SleepNote(
     id: id ?? this.id,
     date: date ?? this.date,
+    bedtime: bedtime.present ? bedtime.value : this.bedtime,
+    wakeTime: wakeTime.present ? wakeTime.value : this.wakeTime,
+    durationMinutes: durationMinutes ?? this.durationMinutes,
     ratingStars: ratingStars ?? this.ratingStars,
     noteText: noteText ?? this.noteText,
     createdAt: createdAt ?? this.createdAt,
@@ -1337,6 +1450,11 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
     return SleepNote(
       id: data.id.present ? data.id.value : this.id,
       date: data.date.present ? data.date.value : this.date,
+      bedtime: data.bedtime.present ? data.bedtime.value : this.bedtime,
+      wakeTime: data.wakeTime.present ? data.wakeTime.value : this.wakeTime,
+      durationMinutes: data.durationMinutes.present
+          ? data.durationMinutes.value
+          : this.durationMinutes,
       ratingStars: data.ratingStars.present
           ? data.ratingStars.value
           : this.ratingStars,
@@ -1350,6 +1468,9 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
     return (StringBuffer('SleepNote(')
           ..write('id: $id, ')
           ..write('date: $date, ')
+          ..write('bedtime: $bedtime, ')
+          ..write('wakeTime: $wakeTime, ')
+          ..write('durationMinutes: $durationMinutes, ')
           ..write('ratingStars: $ratingStars, ')
           ..write('noteText: $noteText, ')
           ..write('createdAt: $createdAt')
@@ -1358,13 +1479,25 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
   }
 
   @override
-  int get hashCode => Object.hash(id, date, ratingStars, noteText, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    date,
+    bedtime,
+    wakeTime,
+    durationMinutes,
+    ratingStars,
+    noteText,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SleepNote &&
           other.id == this.id &&
           other.date == this.date &&
+          other.bedtime == this.bedtime &&
+          other.wakeTime == this.wakeTime &&
+          other.durationMinutes == this.durationMinutes &&
           other.ratingStars == this.ratingStars &&
           other.noteText == this.noteText &&
           other.createdAt == this.createdAt);
@@ -1373,12 +1506,18 @@ class SleepNote extends DataClass implements Insertable<SleepNote> {
 class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
   final Value<int> id;
   final Value<DateTime> date;
+  final Value<DateTime?> bedtime;
+  final Value<DateTime?> wakeTime;
+  final Value<int> durationMinutes;
   final Value<int> ratingStars;
   final Value<String> noteText;
   final Value<DateTime> createdAt;
   const SleepNotesCompanion({
     this.id = const Value.absent(),
     this.date = const Value.absent(),
+    this.bedtime = const Value.absent(),
+    this.wakeTime = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
     this.ratingStars = const Value.absent(),
     this.noteText = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1386,15 +1525,20 @@ class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
   SleepNotesCompanion.insert({
     this.id = const Value.absent(),
     required DateTime date,
+    this.bedtime = const Value.absent(),
+    this.wakeTime = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
     this.ratingStars = const Value.absent(),
-    required String noteText,
+    this.noteText = const Value.absent(),
     required DateTime createdAt,
   }) : date = Value(date),
-       noteText = Value(noteText),
        createdAt = Value(createdAt);
   static Insertable<SleepNote> custom({
     Expression<int>? id,
     Expression<DateTime>? date,
+    Expression<DateTime>? bedtime,
+    Expression<DateTime>? wakeTime,
+    Expression<int>? durationMinutes,
     Expression<int>? ratingStars,
     Expression<String>? noteText,
     Expression<DateTime>? createdAt,
@@ -1402,6 +1546,9 @@ class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (date != null) 'date': date,
+      if (bedtime != null) 'bedtime': bedtime,
+      if (wakeTime != null) 'wake_time': wakeTime,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
       if (ratingStars != null) 'rating_stars': ratingStars,
       if (noteText != null) 'note_text': noteText,
       if (createdAt != null) 'created_at': createdAt,
@@ -1411,6 +1558,9 @@ class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
   SleepNotesCompanion copyWith({
     Value<int>? id,
     Value<DateTime>? date,
+    Value<DateTime?>? bedtime,
+    Value<DateTime?>? wakeTime,
+    Value<int>? durationMinutes,
     Value<int>? ratingStars,
     Value<String>? noteText,
     Value<DateTime>? createdAt,
@@ -1418,6 +1568,9 @@ class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
     return SleepNotesCompanion(
       id: id ?? this.id,
       date: date ?? this.date,
+      bedtime: bedtime ?? this.bedtime,
+      wakeTime: wakeTime ?? this.wakeTime,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       ratingStars: ratingStars ?? this.ratingStars,
       noteText: noteText ?? this.noteText,
       createdAt: createdAt ?? this.createdAt,
@@ -1432,6 +1585,15 @@ class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
     }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
+    }
+    if (bedtime.present) {
+      map['bedtime'] = Variable<DateTime>(bedtime.value);
+    }
+    if (wakeTime.present) {
+      map['wake_time'] = Variable<DateTime>(wakeTime.value);
+    }
+    if (durationMinutes.present) {
+      map['duration_minutes'] = Variable<int>(durationMinutes.value);
     }
     if (ratingStars.present) {
       map['rating_stars'] = Variable<int>(ratingStars.value);
@@ -1450,6 +1612,9 @@ class SleepNotesCompanion extends UpdateCompanion<SleepNote> {
     return (StringBuffer('SleepNotesCompanion(')
           ..write('id: $id, ')
           ..write('date: $date, ')
+          ..write('bedtime: $bedtime, ')
+          ..write('wakeTime: $wakeTime, ')
+          ..write('durationMinutes: $durationMinutes, ')
           ..write('ratingStars: $ratingStars, ')
           ..write('noteText: $noteText, ')
           ..write('createdAt: $createdAt')
@@ -2270,14 +2435,20 @@ typedef $$SleepNotesTableCreateCompanionBuilder =
     SleepNotesCompanion Function({
       Value<int> id,
       required DateTime date,
+      Value<DateTime?> bedtime,
+      Value<DateTime?> wakeTime,
+      Value<int> durationMinutes,
       Value<int> ratingStars,
-      required String noteText,
+      Value<String> noteText,
       required DateTime createdAt,
     });
 typedef $$SleepNotesTableUpdateCompanionBuilder =
     SleepNotesCompanion Function({
       Value<int> id,
       Value<DateTime> date,
+      Value<DateTime?> bedtime,
+      Value<DateTime?> wakeTime,
+      Value<int> durationMinutes,
       Value<int> ratingStars,
       Value<String> noteText,
       Value<DateTime> createdAt,
@@ -2299,6 +2470,21 @@ class $$SleepNotesTableFilterComposer
 
   ColumnFilters<DateTime> get date => $composableBuilder(
     column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get bedtime => $composableBuilder(
+    column: $table.bedtime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get wakeTime => $composableBuilder(
+    column: $table.wakeTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2337,6 +2523,21 @@ class $$SleepNotesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get bedtime => $composableBuilder(
+    column: $table.bedtime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get wakeTime => $composableBuilder(
+    column: $table.wakeTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get ratingStars => $composableBuilder(
     column: $table.ratingStars,
     builder: (column) => ColumnOrderings(column),
@@ -2367,6 +2568,17 @@ class $$SleepNotesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get bedtime =>
+      $composableBuilder(column: $table.bedtime, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get wakeTime =>
+      $composableBuilder(column: $table.wakeTime, builder: (column) => column);
+
+  GeneratedColumn<int> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get ratingStars => $composableBuilder(
     column: $table.ratingStars,
@@ -2413,12 +2625,18 @@ class $$SleepNotesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
+                Value<DateTime?> bedtime = const Value.absent(),
+                Value<DateTime?> wakeTime = const Value.absent(),
+                Value<int> durationMinutes = const Value.absent(),
                 Value<int> ratingStars = const Value.absent(),
                 Value<String> noteText = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SleepNotesCompanion(
                 id: id,
                 date: date,
+                bedtime: bedtime,
+                wakeTime: wakeTime,
+                durationMinutes: durationMinutes,
                 ratingStars: ratingStars,
                 noteText: noteText,
                 createdAt: createdAt,
@@ -2427,12 +2645,18 @@ class $$SleepNotesTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required DateTime date,
+                Value<DateTime?> bedtime = const Value.absent(),
+                Value<DateTime?> wakeTime = const Value.absent(),
+                Value<int> durationMinutes = const Value.absent(),
                 Value<int> ratingStars = const Value.absent(),
-                required String noteText,
+                Value<String> noteText = const Value.absent(),
                 required DateTime createdAt,
               }) => SleepNotesCompanion.insert(
                 id: id,
                 date: date,
+                bedtime: bedtime,
+                wakeTime: wakeTime,
+                durationMinutes: durationMinutes,
                 ratingStars: ratingStars,
                 noteText: noteText,
                 createdAt: createdAt,

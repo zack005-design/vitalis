@@ -35,16 +35,94 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
     super.dispose();
   }
 
-  Future<void> _logMeal(FoodSearchResult item) async {
+  Future<void> _showServingPicker(FoodSearchResult item) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    double servings = 1.0;
+    final List<double> options = [0.5, 1.0, 1.5, 2.0, 3.0];
+
+    final confirmed = await showDialog<double>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(item.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(item.servingDescription, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+              const SizedBox(height: 16),
+              // Serving count selector chips
+              Wrap(
+                spacing: 8,
+                children: options.map((opt) => ChoiceChip(
+                  label: Text("${opt}x"),
+                  selected: servings == opt,
+                  selectedColor: AppColors.primaryBlue,
+                  onSelected: (_) => setLocalState(() => servings = opt),
+                )).toList(),
+              ),
+              const SizedBox(height: 16),
+              // Live calorie/macro preview
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _statPill("Cal", "${(item.calories * servings).round()} kcal"),
+                    _statPill("P", "${((item.proteinG ?? 0) * servings).toStringAsFixed(1)}g"),
+                    _statPill("C", "${((item.carbsG ?? 0) * servings).toStringAsFixed(1)}g"),
+                    _statPill("F", "${((item.fatG ?? 0) * servings).toStringAsFixed(1)}g"),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text("Cancel")),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(servings),
+              child: Text("Log ${servings}x serving"),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != null) {
+      await _logMeal(item, confirmed);
+    }
+  }
+
+  Widget _statPill(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+      ],
+    );
+  }
+
+  Future<void> _logMeal(FoodSearchResult item, [double servings = 1.0]) async {
     final db = ref.read(appDatabaseProvider);
     await db.insertMeal(
       MealsCompanion(
         timestamp: drift.Value(DateTime.now()),
         name: drift.Value(item.name),
-        calories: drift.Value(item.calories),
-        proteinG: drift.Value(item.proteinG),
-        carbsG: drift.Value(item.carbsG),
-        fatG: drift.Value(item.fatG),
+        calories: drift.Value((item.calories * servings).round()),
+        proteinG: drift.Value(item.proteinG != null ? item.proteinG! * servings : null),
+        carbsG: drift.Value(item.carbsG != null ? item.carbsG! * servings : null),
+        fatG: drift.Value(item.fatG != null ? item.fatG! * servings : null),
         source: drift.Value(item.source.name),
       ),
     );
@@ -53,7 +131,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Logged "${item.name}" (${item.calories} kcal)'),
+          content: Text('Logged "${item.name}" (${(item.calories * servings).round()} kcal)'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -139,7 +217,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                   final item = results[index];
                   return GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    onTap: () => _logMeal(item),
+                    onTap: () => _showServingPicker(item),
                     child: Row(
                       children: [
                         _buildSourceBadge(item.source),

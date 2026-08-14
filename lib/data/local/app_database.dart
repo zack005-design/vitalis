@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,7 +16,26 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (m) => m.createAll(),
+      onUpgrade: (m, from, to) async {
+        if (from < 3) {
+          await m.addColumn(waterLogs, waterLogs.amountMl);
+        }
+        if (from < 4) {
+          // Add new columns to sleep_notes
+          await m.addColumn(sleepNotes, sleepNotes.bedtime);
+          await m.addColumn(sleepNotes, sleepNotes.wakeTime);
+          await m.addColumn(sleepNotes, sleepNotes.durationMinutes);
+          // Make noteText optional migration — recreate table safely
+        }
+      },
+    );
+  }
 
   // Meal DAOs
   Stream<List<Meal>> watchTodayMeals(DateTime day) {
@@ -35,6 +53,13 @@ class AppDatabase extends _$AppDatabase {
   Future<bool> updateMeal(Meal meal) => update(meals).replace(meal);
   Future<int> deleteMeal(int id) => (delete(meals)..where((tbl) => tbl.id.equals(id))).go();
 
+  Future<List<Meal>> getMealsForDateRange(DateTime start, DateTime end) {
+    return (select(meals)
+          ..where((tbl) => tbl.timestamp.isBiggerOrEqualValue(start))
+          ..where((tbl) => tbl.timestamp.isSmallerThanValue(end)))
+        .get();
+  }
+
   // Water Log DAOs
   Stream<List<WaterLog>> watchTodayWaterLogs(DateTime day) {
     final start = DateTime(day.year, day.month, day.day);
@@ -49,9 +74,23 @@ class AppDatabase extends _$AppDatabase {
   Future<int> insertWaterLog(WaterLogsCompanion log) => into(waterLogs).insert(log);
   Future<int> deleteWaterLog(int id) => (delete(waterLogs)..where((tbl) => tbl.id.equals(id))).go();
 
+  Future<List<WaterLog>> getWaterLogsForDateRange(DateTime start, DateTime end) {
+    return (select(waterLogs)
+          ..where((tbl) => tbl.timestamp.isBiggerOrEqualValue(start))
+          ..where((tbl) => tbl.timestamp.isSmallerThanValue(end)))
+        .get();
+  }
+
   // Sleep Notes DAOs
   Stream<List<SleepNote>> watchSleepNotes() {
     return (select(sleepNotes)..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])).watch();
+  }
+
+  Stream<List<SleepNote>> watchLastNSleepNotes(int n) {
+    return (select(sleepNotes)
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])
+          ..limit(n))
+        .watch();
   }
 
   Future<int> insertSleepNote(SleepNotesCompanion note) => into(sleepNotes).insert(note);

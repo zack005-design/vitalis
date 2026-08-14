@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/food/food_providers.dart';
 import '../design_system/app_button.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_text_field.dart';
@@ -6,7 +9,7 @@ import '../design_system/app_typography.dart';
 import '../design_system/bottom_sheet_modal.dart';
 import '../design_system/glass_container.dart';
 
-class EditProfileSheet extends StatefulWidget {
+class EditProfileSheet extends ConsumerStatefulWidget {
   const EditProfileSheet({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -18,10 +21,10 @@ class EditProfileSheet extends StatefulWidget {
   }
 
   @override
-  State<EditProfileSheet> createState() => _EditProfileSheetState();
+  ConsumerState<EditProfileSheet> createState() => _EditProfileSheetState();
 }
 
-class _EditProfileSheetState extends State<EditProfileSheet> {
+class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   final _nameController = TextEditingController(text: "Alex Johnson");
   final _ageController = TextEditingController(text: "28");
   final _heightController = TextEditingController(text: "175");
@@ -29,6 +32,25 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
 
   String _activityLevel = "Moderate";
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _nameController.text = prefs.getString('profile_name') ?? "Alex Johnson";
+        _ageController.text = (prefs.getInt('profile_age') ?? 28).toString();
+        _heightController.text = (prefs.getDouble('profile_height') ?? 175.0).toStringAsFixed(0);
+        _weightController.text = (prefs.getDouble('profile_weight') ?? 72.0).toStringAsFixed(0);
+        _activityLevel = prefs.getString('profile_activity') ?? "Moderate";
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -65,6 +87,25 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     return (bmr * multiplier).round();
   }
 
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    final tdee = _calculatedTdee;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_name', _nameController.text.trim());
+    await prefs.setInt('profile_age', int.tryParse(_ageController.text) ?? 28);
+    await prefs.setDouble('profile_height', double.tryParse(_heightController.text) ?? 175);
+    await prefs.setDouble('profile_weight', double.tryParse(_weightController.text) ?? 72);
+    await prefs.setString('profile_activity', _activityLevel);
+    await ref.read(calorieTargetProvider.notifier).setTarget(tdee);
+
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile updated! Target set to $tdee kcal/day')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -73,7 +114,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Profile Photo Header (Stitch UI Spec)
+          // Profile Photo Header
           Center(
             child: Column(
               children: [
@@ -116,7 +157,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "Change Avatar",
+                  "Profile Details",
                   style: AppTypography.labelSm(isDark).copyWith(
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
@@ -178,7 +219,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           ),
           const SizedBox(height: 16),
 
-          // Activity Level Selector (Stitch UI Spec)
+          // Activity Level Selector
           GlassContainer(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -249,18 +290,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
             label: "Update Profile & Goals",
             icon: Icons.check_circle_rounded,
             isLoading: _isSaving,
-            onPressed: () {
-              final nav = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              final tdee = _calculatedTdee;
-              setState(() => _isSaving = true);
-              Future.delayed(const Duration(milliseconds: 400), () {
-                nav.pop();
-                messenger.showSnackBar(
-                  SnackBar(content: Text('Profile updated! Target set to $tdee kcal/day')),
-                );
-              });
-            },
+            onPressed: _isSaving ? null : _save,
           ),
           const SizedBox(height: 16),
         ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/export/json_backup_service.dart';
 import '../../data/health/health_connect_client.dart';
 import '../../domain/food/food_providers.dart';
+import '../../services/notification_service.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_scaffold.dart';
 import '../design_system/app_typography.dart';
@@ -20,6 +22,38 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   bool _useAiNarration = true;
   bool _enableReminders = true;
   bool _isExporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _useAiNarration = prefs.getBool('pref_ai_narration') ?? true;
+        _enableReminders = prefs.getBool('pref_reminders') ?? true;
+      });
+    }
+  }
+
+  Future<void> _saveAiNarration(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('pref_ai_narration', value);
+  }
+
+  Future<void> _saveReminders(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('pref_reminders', value);
+    final svc = NotificationService();
+    if (value) {
+      await svc.scheduleHourlyWaterReminders();
+    } else {
+      await svc.cancelAllReminders();
+    }
+  }
 
   Future<void> _exportData() async {
     setState(() => _isExporting = true);
@@ -229,7 +263,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   title: "On-Device AI Insights",
                   subtitle: "Use Gemini Nano when available (Tier C)",
                   value: _useAiNarration,
-                  onChanged: (val) => setState(() => _useAiNarration = val),
+                  onChanged: (val) {
+                    setState(() => _useAiNarration = val);
+                    _saveAiNarration(val);
+                  },
                 ),
                 _buildDivider(isDark),
                 _buildSwitchTile(
@@ -239,7 +276,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   title: "Offline Reminder Alarms",
                   subtitle: "Water logging & evening sleep wind-down",
                   value: _enableReminders,
-                  onChanged: (val) => setState(() => _enableReminders = val),
+                  onChanged: (val) {
+                    setState(() => _enableReminders = val);
+                    _saveReminders(val);
+                  },
                 ),
               ],
             ),

@@ -34,6 +34,42 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
   final _fatController = TextEditingController();
 
   bool _isSaving = false;
+  String? _nameError;
+  String? _caloriesError;
+  String? _proteinError;
+  String? _carbsError;
+  String? _fatError;
+
+  bool _validateFields() {
+    final name = _nameController.text.trim();
+    final calories = int.tryParse(_caloriesController.text.trim());
+    final protein = double.tryParse(_proteinController.text.trim());
+    final carbs = double.tryParse(_carbsController.text.trim());
+    final fat = double.tryParse(_fatController.text.trim());
+
+    bool valid = true;
+    setState(() {
+      _nameError = name.isEmpty ? 'Name is required' : null;
+      _caloriesError = (calories == null || calories <= 0)
+          ? 'Enter a number > 0'
+          : calories > 5000
+              ? 'Max 5000 kcal'
+              : null;
+      _proteinError = (_proteinController.text.trim().isNotEmpty && (protein == null || protein < 0 || protein > 500))
+          ? 'Enter 0–500g'
+          : null;
+      _carbsError = (_carbsController.text.trim().isNotEmpty && (carbs == null || carbs < 0 || carbs > 500))
+          ? 'Enter 0–500g'
+          : null;
+      _fatError = (_fatController.text.trim().isNotEmpty && (fat == null || fat < 0 || fat > 500))
+          ? 'Enter 0–500g'
+          : null;
+
+      valid = _nameError == null && _caloriesError == null && _proteinError == null &&
+              _carbsError == null && _fatError == null;
+    });
+    return valid;
+  }
 
   @override
   void dispose() {
@@ -47,15 +83,10 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
   }
 
   Future<void> _saveCustomFood() async {
-    final name = _nameController.text.trim();
-    final calories = int.tryParse(_caloriesController.text.trim());
+    if (!_validateFields()) return;
 
-    if (name.isEmpty || calories == null || calories <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid dish name and calorie count.')),
-      );
-      return;
-    }
+    final name = _nameController.text.trim();
+    final calories = int.parse(_caloriesController.text.trim());
 
     setState(() => _isSaving = true);
 
@@ -99,6 +130,11 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                   controller: _nameController,
                   autofocus: true,
                 ),
+                if (_nameError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 4),
+                    child: Text(_nameError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                  ),
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -111,11 +147,21 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: AppTextField(
-                        label: "Calories (kcal)",
-                        placeholder: "0",
-                        controller: _caloriesController,
-                        keyboardType: TextInputType.number,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppTextField(
+                            label: "Calories (kcal)",
+                            placeholder: "0",
+                            controller: _caloriesController,
+                            keyboardType: TextInputType.number,
+                          ),
+                          if (_caloriesError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4, left: 4),
+                              child: Text(_caloriesError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                            ),
+                        ],
                       ),
                     ),
                   ],
