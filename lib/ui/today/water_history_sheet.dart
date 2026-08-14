@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/health/health_connect_client.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/food/food_providers.dart';
 import '../design_system/app_colors.dart';
@@ -21,13 +23,16 @@ class WaterHistorySheet extends ConsumerWidget {
   }
 
   Future<void> _addWater(WidgetRef ref, int amountMl) async {
+    HapticFeedback.lightImpact();
     final db = ref.read(appDatabaseProvider);
+    final now = DateTime.now();
     await db.insertWaterLog(
       WaterLogsCompanion(
         amountMl: drift.Value(amountMl),
-        timestamp: drift.Value(DateTime.now()),
+        timestamp: drift.Value(now),
       ),
     );
+    HealthConnectClient().writeWaterLog(amountMl, now);
   }
 
   Future<void> _deleteWater(WidgetRef ref, int id) async {

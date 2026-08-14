@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app_colors.dart';
-import 'app_typography.dart';
 
-/// Translucent iOS-style segmented control.
+/// Translucent Stitch-style segmented pill control.
 class SegmentedControl<T> extends StatelessWidget {
   final Map<T, String> options;
   final T selectedValue;
@@ -19,13 +18,16 @@ class SegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final bg = isDark ? const Color(0xFF1C1C1E) : const Color(0xFFE3E3E8);
+    final bg = isDark ? const Color(0xFF131B2E) : const Color(0xFFE2E8F0);
 
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+          width: 1,
+        ),
       ),
       padding: const EdgeInsets.all(3),
       child: Row(
@@ -41,19 +43,19 @@ class SegmentedControl<T> extends StatelessWidget {
                 }
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(vertical: 7),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? const Color(0xFF2C2C2E) : AppColors.lightSurface)
+                      ? (isDark ? const Color(0xFF222A3E) : Colors.white)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(13),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 4,
+                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                            blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ]
@@ -62,11 +64,13 @@ class SegmentedControl<T> extends StatelessWidget {
                 child: Center(
                   child: Text(
                     entry.value,
-                    style: AppTypography.subhead(isDark).copyWith(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    style: TextStyle(
+                      fontFamily: "JetBrains Mono",
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected
-                          ? (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)
-                          : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                          ? (isDark ? Colors.white : AppColors.primaryBlue)
+                          : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                     ),
                   ),
                 ),

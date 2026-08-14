@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/health/health_connect_client.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/food/food_providers.dart';
 import '../design_system/app_button.dart';
@@ -80,6 +81,9 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
           createdAt: drift.Value(now),
         ),
       );
+
+      // Background sync to Health Connect
+      HealthConnectClient().writeSleepSession(start: bed, end: wake);
 
       if (mounted) {
         Navigator.of(context).pop();

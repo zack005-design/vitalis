@@ -74,4 +74,41 @@ class HealthConnectClient {
       return false;
     }
   }
+
+  /// Write sleep session to Health Connect
+  Future<bool> writeSleepSession({required DateTime start, required DateTime end}) async {
+    try {
+      final durationHours = end.difference(start).inMinutes / 60.0;
+      return await _health.writeHealthData(
+        value: durationHours,
+        type: HealthDataType.SLEEP_SESSION,
+        startTime: start,
+        endTime: end,
+        unit: HealthDataUnit.HOUR,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Write meal nutrition to Health Connect
+  Future<bool> writeMealNutrition({
+    required int calories,
+    double? proteinG,
+    double? carbsG,
+    double? fatG,
+    required DateTime timestamp,
+  }) async {
+    try {
+      return await _health.writeHealthData(
+        value: calories.toDouble(),
+        type: HealthDataType.NUTRITION,
+        startTime: timestamp,
+        endTime: timestamp,
+        unit: HealthDataUnit.KILOCALORIE,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
 }

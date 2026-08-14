@@ -1,7 +1,9 @@
+import 'dart:ui';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/health/health_connect_client.dart';
 import '../../data/local/app_database.dart';
 import '../../data/food/food_search_repository.dart';
 import '../../domain/food/food_providers.dart';
@@ -28,6 +30,7 @@ class FoodSearchSheet extends ConsumerStatefulWidget {
 
 class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
   final _searchController = TextEditingController();
+  String _selectedCategory = 'All';
 
   @override
   void dispose() {
@@ -36,12 +39,14 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
   }
 
   Future<void> _showServingPicker(FoodSearchResult item) async {
+    HapticFeedback.selectionClick();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     double servings = 1.0;
     final List<double> options = [0.5, 1.0, 1.5, 2.0, 3.0];
 
     final confirmed = await showDialog<double>(
       context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) {
           final totalEnergy = (item.calories * servings).round();
@@ -49,168 +54,180 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
           final carbs = ((item.carbsG ?? 0) * servings);
           final fat = ((item.fatG ?? 0) * servings);
 
-          return Dialog(
-            backgroundColor: isDark ? const Color(0xFF131B2E) : Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Top close button & Icon
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox(width: 32),
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.restaurant_rounded, color: AppColors.calorieAccent, size: 28),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 22),
-                        onPressed: () => Navigator.of(ctx).pop(null),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  Text(
-                    item.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.servingDescription,
-                    style: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Serving Size Label & Chips
-                  Text(
-                    "SERVING SIZE",
-                    style: TextStyle(
-                      fontFamily: "JetBrains Mono",
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: options.map((opt) {
-                      final isSel = servings == opt;
-                      return ChoiceChip(
-                        label: Text("${opt}x"),
-                        selected: isSel,
-                        selectedColor: AppColors.primaryBlue,
-                        backgroundColor: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isSel ? Colors.white : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                        ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        onSelected: (_) => setLocalState(() => servings = opt),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Energy & Macro Card
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0B1326) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                      ),
-                    ),
-                    child: Column(
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Dialog(
+              backgroundColor: isDark ? const Color(0xFF131B2E) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: BorderSide(
+                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+                  width: 1,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Top close button & Icon
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Total Energy",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  "$totalEnergy",
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  "kcal",
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        const SizedBox(width: 32),
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(Icons.restaurant_rounded, color: AppColors.calorieAccent, size: 28),
                         ),
-                        const SizedBox(height: 14),
-                        const Divider(height: 1, color: Color(0x1FFFFFFF)),
-                        const SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _macroPill("PROTEIN", "${protein.toStringAsFixed(1)}g", AppColors.proteinAccent, isDark),
-                            _macroPill("CARBS", "${carbs.toStringAsFixed(1)}g", AppColors.carbsAccent, isDark),
-                            _macroPill("FAT", "${fat.toStringAsFixed(1)}g", AppColors.fatAccent, isDark),
-                          ],
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 22),
+                          onPressed: () => Navigator.of(ctx).pop(null),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 14),
 
-                  // Log Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    Text(
+                      item.name,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.lightTextPrimary,
                       ),
-                      icon: const Icon(Icons.add_rounded, size: 20),
-                      label: Text(
-                        "Log ${servings}x serving",
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(servings),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      item.servingDescription,
+                      style: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Serving Size Label & Chips
+                    Text(
+                      "SERVING SIZE",
+                      style: TextStyle(
+                        fontFamily: "JetBrains Mono",
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: options.map((opt) {
+                        final isSel = servings == opt;
+                        return ChoiceChip(
+                          label: Text("${opt}x"),
+                          selected: isSel,
+                          selectedColor: AppColors.primaryBlue,
+                          backgroundColor: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                          labelStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isSel ? Colors.white : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          onSelected: (_) {
+                            HapticFeedback.selectionClick();
+                            setLocalState(() => servings = opt);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Energy & Macro Card
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0B1326) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Total Energy",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    "$totalEnergy",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "kcal",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          const Divider(height: 1, color: Color(0x1FFFFFFF)),
+                          const SizedBox(height: 14),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _macroPill("PROTEIN", "${protein.toStringAsFixed(1)}g", AppColors.proteinAccent, isDark),
+                              _macroPill("CARBS", "${carbs.toStringAsFixed(1)}g", AppColors.carbsAccent, isDark),
+                              _macroPill("FAT", "${fat.toStringAsFixed(1)}g", AppColors.fatAccent, isDark),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Log Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Icon(Icons.add_rounded, size: 20),
+                        label: Text(
+                          "Log ${servings}x serving",
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                        onPressed: () => Navigator.of(ctx).pop(servings),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -268,6 +285,15 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
         fatG: drift.Value(item.fatG != null ? item.fatG! * servings : null),
         source: drift.Value(item.source.name),
       ),
+    );
+
+    // Background sync to Health Connect
+    HealthConnectClient().writeMealNutrition(
+      calories: (item.calories * servings).round(),
+      proteinG: item.proteinG != null ? item.proteinG! * servings : null,
+      carbsG: item.carbsG != null ? item.carbsG! * servings : null,
+      fatG: item.fatG != null ? item.fatG! * servings : null,
+      timestamp: DateTime.now(),
     );
 
     if (mounted) {
@@ -328,7 +354,24 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+
+        // Filter Category Chips (All, South Indian, Custom, Packaged)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _filterChip("All", isDark),
+              const SizedBox(width: 8),
+              _filterChip("South Indian", isDark),
+              const SizedBox(width: 8),
+              _filterChip("Custom", isDark),
+              const SizedBox(width: 8),
+              _filterChip("Packaged", isDark),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
 
         // Custom Dish Action Trigger
         Row(
@@ -356,12 +399,24 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
 
         // Search Results List
         SizedBox(
-          height: 380,
+          height: 340,
           child: searchResultsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => Center(child: Text("Error: $err")),
             data: (results) {
-              if (results.isEmpty) {
+              // Apply category filter
+              final filtered = results.where((item) {
+                if (_selectedCategory == "South Indian") {
+                  return item.source == FoodSearchSource.indbLocal;
+                } else if (_selectedCategory == "Custom") {
+                  return item.source == FoodSearchSource.custom;
+                } else if (_selectedCategory == "Packaged") {
+                  return item.source == FoodSearchSource.openFoodFacts;
+                }
+                return true;
+              }).toList();
+
+              if (filtered.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -375,10 +430,10 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
               }
 
               return ListView.separated(
-                itemCount: results.length,
+                itemCount: filtered.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
-                  final item = results[index];
+                  final item = filtered[index];
                   return GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     onTap: () => _showServingPicker(item),
@@ -423,6 +478,41 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _filterChip(String label, bool isDark) {
+    final isSelected = _selectedCategory == label;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _selectedCategory = label);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primaryBlue
+              : (isDark ? const Color(0xFF171F33) : const Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primaryBlue
+                : (isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+          ),
+        ),
+      ),
     );
   }
 
