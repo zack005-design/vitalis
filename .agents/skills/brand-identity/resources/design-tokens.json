@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "brand_name": "CalTrack",
+    "description": "Core design tokens for UI implementation and glassmorphism styling."
+  },
+  "colors": {
+    "dark": {
+      "background": "#0C0D10",
+      "surface": "#16181D",
+      "surface_glass": "rgba(44, 45, 53, 0.12)",
+      "card_border": "rgba(255, 255, 255, 0.10)",
+      "text_primary": "#F5F6F8",
+      "text_secondary": "#8E8E93",
+      "text_muted": "#636366"
+    },
+    "light": {
+      "background": "#F2F2F7",
+      "surface": "#FFFFFF",
+      "surface_glass": "rgba(255, 255, 255, 0.72)",
+      "card_border": "rgba(0, 0, 0, 0.10)",
+      "text_primary": "#1C1C1E",
+      "text_secondary": "#6C6C70",
+      "text_muted": "#8E8E93"
+    },
+    "accents": {
+      "calorie": "#FF5252",
+      "water": "#00B0FF",
+      "sleep": "#7C4DFF",
+      "score": "#00E676",
+      "destructive": "#FF3B30",
+      "warning": "#FF9500"
+    }
+  },
+  "typography": {
+    "font_family": "Inter",
+    "font_weights": {
+      "bold": 700,
+      "semibold": 600,
+      "medium": 500,
+      "regular": 400
+    },
+    "scale": {
+      "large_title": 34,
+      "title1": 28,
+      "title2": 22,
+      "headline": 17,
+      "body": 17,
+      "subhead": 15,
+      "footnote": 13,
+      "caption": 11
+    }
+  },
+  "ui": {
+    "border_radius_card": "18px",
+    "border_radius_sheet": "24px",
+    "border_radius_button": "14px",
+    "border_radius_nav": "28px",
+    "blur_sigma_default": 15.0,
+    "blur_sigma_modal": 20.0
+  }
+}

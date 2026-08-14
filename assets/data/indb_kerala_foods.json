@@ -1,0 +1,443 @@
+[
+  {
+    "name": "Appam (1 piece)",
+    "calories": 120,
+    "protein_g": 2.1,
+    "carbs_g": 24.5,
+    "fat_g": 1.2,
+    "serving_description": "1 piece (45g)",
+    "category": "Kerala Breakfast"
+  },
+  {
+    "name": "Puttu - Rice (1 portion / 100g)",
+    "calories": 180,
+    "protein_g": 3.2,
+    "carbs_g": 38.0,
+    "fat_g": 1.5,
+    "serving_description": "1 portion (100g)",
+    "category": "Kerala Breakfast"
+  },
+  {
+    "name": "Kadala Curry (1 bowl / 150g)",
+    "calories": 210,
+    "protein_g": 9.5,
+    "carbs_g": 28.0,
+    "fat_g": 7.0,
+    "serving_description": "1 bowl (150g)",
+    "category": "Kerala Curry"
+  },
+  {
+    "name": "Idiyappam / String Hopper (2 pieces)",
+    "calories": 140,
+    "protein_g": 2.4,
+    "carbs_g": 30.0,
+    "fat_g": 0.8,
+    "serving_description": "2 pieces (70g)",
+    "category": "Kerala Breakfast"
+  },
+  {
+    "name": "Kerala Parippu Curry (1 bowl / 150g)",
+    "calories": 165,
+    "protein_g": 8.0,
+    "carbs_g": 22.0,
+    "fat_g": 5.5,
+    "serving_description": "1 bowl (150g)",
+    "category": "Kerala Curry"
+  },
+  {
+    "name": "Avial (1 bowl / 150g)",
+    "calories": 145,
+    "protein_g": 3.5,
+    "carbs_g": 16.0,
+    "fat_g": 7.8,
+    "serving_description": "1 bowl (150g)",
+    "category": "Kerala Side Dish"
+  },
+  {
+    "name": "Cabbage Thoran (1 cup / 100g)",
+    "calories": 95,
+    "protein_g": 2.2,
+    "carbs_g": 8.5,
+    "fat_g": 5.8,
+    "serving_description": "1 cup (100g)",
+    "category": "Kerala Side Dish"
+  },
+  {
+    "name": "Kerala Fish Curry / Meen Curry (1 serving / 150g)",
+    "calories": 220,
+    "protein_g": 18.5,
+    "carbs_g": 6.0,
+    "fat_g": 13.0,
+    "serving_description": "1 serving (150g)",
+    "category": "Kerala Main"
+  },
+  {
+    "name": "Kerala Chicken Curry (1 serving / 180g)",
+    "calories": 280,
+    "protein_g": 22.0,
+    "carbs_g": 7.5,
+    "fat_g": 18.0,
+    "serving_description": "1 serving (180g)",
+    "category": "Kerala Main"
+  },
+  {
+    "name": "Kerala Sambar (1 bowl / 150g)",
+    "calories": 130,
+    "protein_g": 5.2,
+    "carbs_g": 20.0,
+    "fat_g": 3.2,
+    "serving_description": "1 bowl (150g)",
+    "category": "Kerala Curry"
+  },
+  {
+    "name": "Matta Rice / Boiled Rice (1 cup cooked / 150g)",
+    "calories": 195,
+    "protein_g": 4.1,
+    "carbs_g": 42.0,
+    "fat_g": 0.9,
+    "serving_description": "1 cup cooked (150g)",
+    "category": "Rice & Grains"
+  },
+  {
+    "name": "White Rice / Steam Rice (1 cup cooked / 150g)",
+    "calories": 205,
+    "protein_g": 4.2,
+    "carbs_g": 45.0,
+    "fat_g": 0.4,
+    "serving_description": "1 cup cooked (150g)",
+    "category": "Rice & Grains"
+  },
+  {
+    "name": "Chicken Biryani (1 plate / 350g)",
+    "calories": 520,
+    "protein_g": 28.0,
+    "carbs_g": 62.0,
+    "fat_g": 18.0,
+    "serving_description": "1 plate (350g)",
+    "category": "Main Dish"
+  },
+  {
+    "name": "Egg Biryani (1 plate / 300g)",
+    "calories": 440,
+    "protein_g": 16.0,
+    "carbs_g": 58.0,
+    "fat_g": 15.0,
+    "serving_description": "1 plate (300g)",
+    "category": "Main Dish"
+  },
+  {
+    "name": "Boiled Egg (1 large)",
+    "calories": 78,
+    "protein_g": 6.3,
+    "carbs_g": 0.6,
+    "fat_g": 5.3,
+    "serving_description": "1 large egg (50g)",
+    "category": "Eggs & Poultry"
+  },
+  {
+    "name": "Egg Omelette (2 eggs with oil)",
+    "calories": 180,
+    "protein_g": 13.0,
+    "carbs_g": 1.2,
+    "fat_g": 14.0,
+    "serving_description": "2 eggs (100g)",
+    "category": "Eggs & Poultry"
+  },
+  {
+    "name": "Scrambled Eggs (2 eggs)",
+    "calories": 170,
+    "protein_g": 12.5,
+    "carbs_g": 1.5,
+    "fat_g": 12.8,
+    "serving_description": "2 eggs (100g)",
+    "category": "Eggs & Poultry"
+  },
+  {
+    "name": "Egg Curry (1 serving / 2 eggs)",
+    "calories": 230,
+    "protein_g": 14.0,
+    "carbs_g": 8.0,
+    "fat_g": 16.0,
+    "serving_description": "1 serving (180g)",
+    "category": "Eggs & Poultry"
+  },
+  {
+    "name": "Grilled Chicken Breast (100g)",
+    "calories": 165,
+    "protein_g": 31.0,
+    "carbs_g": 0.0,
+    "fat_g": 3.6,
+    "serving_description": "100g cooked",
+    "category": "Poultry & Meat"
+  },
+  {
+    "name": "Oatmeal / Rolled Oats (1 cup cooked with milk)",
+    "calories": 220,
+    "protein_g": 9.0,
+    "carbs_g": 34.0,
+    "fat_g": 5.0,
+    "serving_description": "1 cup cooked (240ml)",
+    "category": "Breakfast & Grains"
+  },
+  {
+    "name": "Cow Milk / Whole Milk (1 glass / 250ml)",
+    "calories": 150,
+    "protein_g": 8.0,
+    "carbs_g": 12.0,
+    "fat_g": 8.0,
+    "serving_description": "1 glass (250ml)",
+    "category": "Dairy & Milk"
+  },
+  {
+    "name": "Curd / Dahi / Yogurt (1 cup / 150g)",
+    "calories": 100,
+    "protein_g": 5.5,
+    "carbs_g": 7.0,
+    "fat_g": 5.0,
+    "serving_description": "1 cup (150g)",
+    "category": "Dairy & Milk"
+  },
+  {
+    "name": "Paneer / Cottage Cheese (100g raw)",
+    "calories": 265,
+    "protein_g": 18.0,
+    "carbs_g": 3.2,
+    "fat_g": 20.0,
+    "serving_description": "100g raw",
+    "category": "Dairy & Milk"
+  },
+  {
+    "name": "Paneer Butter Masala (1 bowl / 150g)",
+    "calories": 320,
+    "protein_g": 12.0,
+    "carbs_g": 14.0,
+    "fat_g": 24.0,
+    "serving_description": "1 bowl (150g)",
+    "category": "Curries & Sides"
+  },
+  {
+    "name": "Dal Tadka / Yellow Dal (1 bowl / 150g)",
+    "calories": 150,
+    "protein_g": 7.5,
+    "carbs_g": 21.0,
+    "fat_g": 4.5,
+    "serving_description": "1 bowl (150g)",
+    "category": "Curries & Sides"
+  },
+  {
+    "name": "Chole / Chickpea Curry (1 bowl / 150g)",
+    "calories": 210,
+    "protein_g": 9.0,
+    "carbs_g": 30.0,
+    "fat_g": 6.5,
+    "serving_description": "1 bowl (150g)",
+    "category": "Curries & Sides"
+  },
+  {
+    "name": "Rajma Curry (1 bowl / 150g)",
+    "calories": 190,
+    "protein_g": 8.5,
+    "carbs_g": 28.0,
+    "fat_g": 5.0,
+    "serving_description": "1 bowl (150g)",
+    "category": "Curries & Sides"
+  },
+  {
+    "name": "Banana (1 medium)",
+    "calories": 105,
+    "protein_g": 1.3,
+    "carbs_g": 27.0,
+    "fat_g": 0.3,
+    "serving_description": "1 medium (118g)",
+    "category": "Fruits"
+  },
+  {
+    "name": "Apple (1 medium)",
+    "calories": 95,
+    "protein_g": 0.5,
+    "carbs_g": 25.0,
+    "fat_g": 0.3,
+    "serving_description": "1 medium (182g)",
+    "category": "Fruits"
+  },
+  {
+    "name": "Orange (1 medium)",
+    "calories": 62,
+    "protein_g": 1.2,
+    "carbs_g": 15.0,
+    "fat_g": 0.2,
+    "serving_description": "1 medium (130g)",
+    "category": "Fruits"
+  },
+  {
+    "name": "Almonds (10 pieces / 12g)",
+    "calories": 70,
+    "protein_g": 2.5,
+    "carbs_g": 2.6,
+    "fat_g": 6.0,
+    "serving_description": "10 almonds (12g)",
+    "category": "Nuts & Seeds"
+  },
+  {
+    "name": "Peanut Butter (1 tbsp / 16g)",
+    "calories": 95,
+    "protein_g": 4.0,
+    "carbs_g": 3.5,
+    "fat_g": 8.0,
+    "serving_description": "1 tbsp (16g)",
+    "category": "Nuts & Seeds"
+  },
+  {
+    "name": "Whole Wheat Bread (2 slices)",
+    "calories": 140,
+    "protein_g": 6.0,
+    "carbs_g": 24.0,
+    "fat_g": 2.0,
+    "serving_description": "2 slices (60g)",
+    "category": "Breads & Bakery"
+  },
+  {
+    "name": "White Bread (2 slices)",
+    "calories": 150,
+    "protein_g": 4.5,
+    "carbs_g": 28.0,
+    "fat_g": 1.8,
+    "serving_description": "2 slices (60g)",
+    "category": "Breads & Bakery"
+  },
+  {
+    "name": "Indian Milk Tea / Chai (1 cup / 150ml)",
+    "calories": 75,
+    "protein_g": 2.2,
+    "carbs_g": 10.0,
+    "fat_g": 2.8,
+    "serving_description": "1 cup (150ml)",
+    "category": "Beverages"
+  },
+  {
+    "name": "Black Coffee (1 cup / 150ml)",
+    "calories": 5,
+    "protein_g": 0.3,
+    "carbs_g": 0.0,
+    "fat_g": 0.0,
+    "serving_description": "1 cup (150ml)",
+    "category": "Beverages"
+  },
+  {
+    "name": "Whey Protein Shake (1 scoop in water)",
+    "calories": 120,
+    "protein_g": 24.0,
+    "carbs_g": 3.0,
+    "fat_g": 1.5,
+    "serving_description": "1 scoop (30g)",
+    "category": "Supplements"
+  },
+  {
+    "name": "Maggi Noodles (1 pack prepared / 70g)",
+    "calories": 310,
+    "protein_g": 7.0,
+    "carbs_g": 46.0,
+    "fat_g": 11.5,
+    "serving_description": "1 pack (70g)",
+    "category": "Instant Foods"
+  },
+  {
+    "name": "Samosa (1 piece)",
+    "calories": 250,
+    "protein_g": 4.0,
+    "carbs_g": 32.0,
+    "fat_g": 12.5,
+    "serving_description": "1 piece (90g)",
+    "category": "Snacks & Appetizers"
+  },
+  {
+    "name": "Kallappam (1 piece)",
+    "calories": 135,
+    "protein_g": 2.3,
+    "carbs_g": 26.0,
+    "fat_g": 2.1,
+    "serving_description": "1 piece (50g)",
+    "category": "Kerala Breakfast"
+  },
+  {
+    "name": "Kappa Erachi / Tapioca with Meat (1 bowl / 200g)",
+    "calories": 340,
+    "protein_g": 16.0,
+    "carbs_g": 45.0,
+    "fat_g": 11.0,
+    "serving_description": "1 bowl (200g)",
+    "category": "Kerala Main"
+  },
+  {
+    "name": "Idli (2 medium pieces)",
+    "calories": 130,
+    "protein_g": 4.2,
+    "carbs_g": 26.5,
+    "fat_g": 0.6,
+    "serving_description": "2 pieces (100g)",
+    "category": "South Indian Breakfast"
+  },
+  {
+    "name": "Plain Dosa (1 medium)",
+    "calories": 165,
+    "protein_g": 3.8,
+    "carbs_g": 29.0,
+    "fat_g": 3.7,
+    "serving_description": "1 medium (80g)",
+    "category": "South Indian Breakfast"
+  },
+  {
+    "name": "Masala Dosa (1 piece)",
+    "calories": 310,
+    "protein_g": 6.5,
+    "carbs_g": 46.0,
+    "fat_g": 11.2,
+    "serving_description": "1 piece (180g)",
+    "category": "South Indian Breakfast"
+  },
+  {
+    "name": "Coconut Chutney (2 tbsp / 30g)",
+    "calories": 70,
+    "protein_g": 1.0,
+    "carbs_g": 3.0,
+    "fat_g": 6.2,
+    "serving_description": "2 tbsp (30g)",
+    "category": "Condiment"
+  },
+  {
+    "name": "Upma / Rava Upma (1 cup / 150g)",
+    "calories": 210,
+    "protein_g": 4.8,
+    "carbs_g": 34.0,
+    "fat_g": 6.5,
+    "serving_description": "1 cup (150g)",
+    "category": "South Indian Breakfast"
+  },
+  {
+    "name": "Wheat Chapati / Roti (1 piece)",
+    "calories": 105,
+    "protein_g": 3.1,
+    "carbs_g": 20.0,
+    "fat_g": 1.8,
+    "serving_description": "1 piece (40g)",
+    "category": "Indian Breads"
+  },
+  {
+    "name": "Kerala Porotta / Parotta (1 piece)",
+    "calories": 290,
+    "protein_g": 5.5,
+    "carbs_g": 44.0,
+    "fat_g": 10.5,
+    "serving_description": "1 piece (80g)",
+    "category": "Kerala Breads"
+  },
+  {
+    "name": "Payasam / Semiya Payasam (1 small cup / 100g)",
+    "calories": 185,
+    "protein_g": 3.2,
+    "carbs_g": 32.0,
+    "fat_g": 5.4,
+    "serving_description": "1 cup (100g)",
+    "category": "Dessert"
+  }
+]
