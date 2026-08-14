@@ -30,6 +30,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       extendBody: true,
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -38,7 +40,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        margin: EdgeInsets.fromLTRB(20, 0, 20, 10 + (bottomInset > 0 ? bottomInset : 10)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(40),
           child: BackdropFilter(

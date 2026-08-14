@@ -235,6 +235,11 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: _activityLevel,
+                  dropdownColor: isDark ? const Color(0xFF171F33) : Colors.white,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                    fontSize: 14,
+                  ),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.directions_run_rounded, color: AppColors.primaryBlue),
                     filled: true,

@@ -19,6 +19,9 @@ class MoreScreen extends ConsumerStatefulWidget {
 }
 
 class _MoreScreenState extends ConsumerState<MoreScreen> {
+  String _profileName = "Alex Johnson";
+  String _profileDetails = "28 yrs • 175 cm • 72 kg • Moderate";
+  String _activityLevel = "Moderate";
   bool _useAiNarration = true;
   bool _enableReminders = true;
   bool _isExporting = false;
@@ -32,7 +35,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
+      final name = prefs.getString('profile_name') ?? "Alex Johnson";
+      final age = prefs.getInt('profile_age') ?? 28;
+      final height = prefs.getDouble('profile_height')?.toStringAsFixed(0) ?? "175";
+      final weight = prefs.getDouble('profile_weight')?.toStringAsFixed(0) ?? "72";
+      final act = prefs.getString('profile_activity') ?? "Moderate";
       setState(() {
+        _profileName = name;
+        _activityLevel = act;
+        _profileDetails = "$age yrs • $height cm • $weight kg • $act";
         _useAiNarration = prefs.getBool('pref_ai_narration') ?? true;
         _enableReminders = prefs.getBool('pref_reminders') ?? true;
       });
@@ -86,7 +97,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF131B2E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text("Reset All Data?", style: AppTypography.headline(isDark)),
         content: Text(
@@ -104,14 +115,20 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Local data reset successfully.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              final db = ref.read(appDatabaseProvider);
+              await db.delete(db.meals).go();
+              await db.delete(db.waterLogs).go();
+              await db.delete(db.sleepNotes).go();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Local database cleared successfully.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             child: const Text("Delete All"),
           ),
@@ -123,6 +140,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final calorieTarget = ref.watch(calorieTargetProvider);
+    final waterTarget = ref.watch(waterTargetProvider);
 
     return AppScaffold(
       title: "Settings",
@@ -132,7 +151,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           // User Profile Card Header
           GlassContainer(
             padding: const EdgeInsets.all(18),
-            onTap: () => EditProfileSheet.show(context),
+            onTap: () async {
+              await EditProfileSheet.show(context);
+              _loadPrefs();
+            },
             child: Row(
               children: [
                 Container(
@@ -165,13 +187,20 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Alex Johnson",
-                        style: AppTypography.title2(isDark).copyWith(fontSize: 18),
+                        _profileName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                        ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
-                        "28 yrs • 175 cm • 72 kg • Active",
-                        style: AppTypography.footnote(isDark),
+                        _profileDetails,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -191,7 +220,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
           Text(
             "Metabolic Targets",
-            style: AppTypography.headline(isDark).copyWith(fontSize: 15),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -205,8 +238,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   icon: Icons.track_changes_rounded,
                   iconBg: AppColors.calorieAccent,
                   title: "Calorie & Water Goals",
-                  subtitle: "BMR/TDEE Goal: 2,200 kcal • 2.0L",
-                  onTap: () => EditProfileSheet.show(context),
+                  subtitle: "Daily Target: $calorieTarget kcal • ${(waterTarget / 1000).toStringAsFixed(1)}L",
+                  onTap: () async {
+                    await EditProfileSheet.show(context);
+                    _loadPrefs();
+                  },
                 ),
                 _buildDivider(isDark),
                 _buildSettingsTile(
@@ -214,8 +250,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   icon: Icons.directions_run_rounded,
                   iconBg: AppColors.primaryBlue,
                   title: "Activity Level",
-                  subtitle: "Moderate (4-5 workouts/week)",
-                  onTap: () => EditProfileSheet.show(context),
+                  subtitle: "$_activityLevel activity tier",
+                  onTap: () async {
+                    await EditProfileSheet.show(context);
+                    _loadPrefs();
+                  },
                 ),
               ],
             ),
@@ -224,7 +263,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
           Text(
             "Sync & AI Intelligence",
-            style: AppTypography.headline(isDark).copyWith(fontSize: 15),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -288,7 +331,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
           Text(
             "Privacy & Local Data",
-            style: AppTypography.headline(isDark).copyWith(fontSize: 15),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -309,22 +356,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _buildDivider(isDark),
                 _buildSettingsTile(
                   isDark: isDark,
-                  icon: Icons.download_rounded,
-                  iconBg: AppColors.sleepAccent,
-                  title: "Import & Restore",
-                  subtitle: "Restore SQLite database from JSON backup",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Select backup file to restore database.'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                ),
-                _buildDivider(isDark),
-                _buildSettingsTile(
-                  isDark: isDark,
                   icon: Icons.delete_forever_rounded,
                   iconBg: AppColors.destructive,
                   title: "Reset Local Data",
@@ -337,7 +368,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Local-First Reassurance Banner Card
+          // Local-First Privacy Reassurance Card
           GlassContainer(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -361,12 +392,19 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                     children: [
                       Text(
                         "100% Offline & Private",
-                        style: AppTypography.subhead(isDark).copyWith(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         "No accounts, no cloud sync, zero tracking. All health data remains strictly on your device.",
-                        style: AppTypography.footnote(isDark),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -399,25 +437,39 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: iconBg,
+            color: iconBg.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: isLoading
-              ? const Padding(
-                  padding: EdgeInsets.all(10),
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : Icon(icon, color: Colors.white, size: 20),
+          child: Icon(icon, color: iconBg, size: 20),
         ),
         title: Text(
           title,
-          style: AppTypography.bodyMd(isDark).copyWith(
+          style: TextStyle(
+            fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: isDestructive ? AppColors.destructive : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+            color: isDestructive
+                ? AppColors.destructive
+                : (isDark ? Colors.white : AppColors.lightTextPrimary),
           ),
         ),
-        subtitle: Text(subtitle, style: AppTypography.footnote(isDark)),
-        trailing: isDestructive ? null : Icon(Icons.chevron_right_rounded, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+          ),
+        ),
+        trailing: isLoading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(
+                Icons.chevron_right_rounded,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                size: 20,
+              ),
       ),
     );
   }
@@ -431,30 +483,36 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: SwitchListTile(
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: iconBg.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: iconBg, size: 20),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white : AppColors.lightTextPrimary,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 12,
+          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+        ),
+      ),
+      trailing: Switch.adaptive(
         value: value,
-        onChanged: onChanged,
         activeTrackColor: AppColors.primaryBlue,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-        secondary: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: iconBg,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
-        title: Text(
-          title,
-          style: AppTypography.bodyMd(isDark).copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          ),
-        ),
-        subtitle: Text(subtitle, style: AppTypography.footnote(isDark)),
+        onChanged: onChanged,
       ),
     );
   }
@@ -463,7 +521,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     return Divider(
       height: 1,
       indent: 68,
-      endIndent: 16,
       color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
     );
   }
