@@ -32,10 +32,15 @@ class TodayScreen extends ConsumerWidget {
     HealthConnectClient().writeWaterLog(amountMl, now).ignore();
   }
 
-  Future<void> _deleteMeal(WidgetRef ref, int id) async {
+  Future<void> _deleteMeal(WidgetRef ref, Meal meal) async {
     HapticFeedback.mediumImpact();
     final db = ref.read(appDatabaseProvider);
-    await db.deleteMeal(id);
+    await db.deleteMeal(meal.id);
+  }
+
+  Future<void> _restoreMeal(WidgetRef ref, Meal meal) async {
+    final db = ref.read(appDatabaseProvider);
+    await db.restoreMeal(meal);
   }
 
   String _formatDuration(int minutes) {
@@ -479,7 +484,8 @@ class TodayScreen extends ConsumerWidget {
                   return SwipeToDeleteRow(
                     itemKey: ValueKey(meal.id),
                     title: meal.name,
-                    onDelete: () => _deleteMeal(ref, meal.id),
+                    onDelete: () => _deleteMeal(ref, meal),
+                    onUndo: () => _restoreMeal(ref, meal),
                     child: GlassContainer(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       child: Row(

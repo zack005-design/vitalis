@@ -35,9 +35,14 @@ class WaterHistorySheet extends ConsumerWidget {
     HealthConnectClient().writeWaterLog(amountMl, now);
   }
 
-  Future<void> _deleteWater(WidgetRef ref, int id) async {
+  Future<void> _deleteWater(WidgetRef ref, WaterLog log) async {
     final db = ref.read(appDatabaseProvider);
-    await db.deleteWaterLog(id);
+    await db.deleteWaterLog(log.id);
+  }
+
+  Future<void> _restoreWater(WidgetRef ref, WaterLog log) async {
+    final db = ref.read(appDatabaseProvider);
+    await db.restoreWaterLog(log);
   }
 
   @override
@@ -144,7 +149,8 @@ class WaterHistorySheet extends ConsumerWidget {
                 return SwipeToDeleteRow(
                   itemKey: ValueKey(log.id),
                   title: "${log.amountMl}ml water",
-                  onDelete: () => _deleteWater(ref, log.id),
+                  onDelete: () => _deleteWater(ref, log),
+                  onUndo: () => _restoreWater(ref, log),
                   child: GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(

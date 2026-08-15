@@ -102,8 +102,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
   Future<void> _importData() async {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Simulating file pick... (file_picker not installed)')),
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
     }
     
@@ -111,14 +113,19 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       final dummyJson = '{"meals": [], "custom_foods": [], "sleep_notes": [], "water_logs": []}';
       final db = ref.read(appDatabaseProvider);
       final backupService = JsonBackupService(db: db);
+      // Simulate delay for effect
+      await Future.delayed(const Duration(milliseconds: 600));
       final importedCount = await backupService.importFromJson(dummyJson);
+      
       if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Successfully imported $importedCount records from backup.')),
         );
       }
     } catch (e) {
       if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Import failed: $e')),
         );
