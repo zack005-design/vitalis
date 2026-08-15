@@ -77,34 +77,41 @@ final recentSleepLogsProvider = StreamProvider<List<SleepNote>>((ref) {
   return db.watchLastNSleepNotes(7);
 });
 
+List<double> _buildHistoryArray(List<Map<String, dynamic>> grouped, int days, DateTime now) {
+  final dateToTotal = {
+    for (final row in grouped)
+      row['date'] as String: ((row['total'] as num?)?.toDouble() ?? 0.0)
+  };
+
+  final List<double> result = [];
+  for (int i = days - 1; i >= 0; i--) {
+    final dayStart = DateTime(now.year, now.month, now.day - i);
+    final dateStr = dayStart.toIso8601String().substring(0, 10);
+    result.add(dateToTotal[dateStr] ?? 0.0);
+  }
+  return result;
+}
+
 // Calorie history for insights charts — last N days, per day total
 final calorieHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
-  final List<double> result = [];
-  for (int i = days - 1; i >= 0; i--) {
-    final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dayEnd = dayStart.add(const Duration(days: 1));
-    final mealList = await db.getMealsForDateRange(dayStart, dayEnd);
-    final total = mealList.fold<int>(0, (s, m) => s + m.calories);
-    result.add(total.toDouble());
-  }
-  return result;
+  final startDay = DateTime(now.year, now.month, now.day - (days - 1));
+  final endDay = DateTime(now.year, now.month, now.day + 1);
+
+  final grouped = await db.getDailyCaloriesForDateRange(startDay, endDay);
+  return _buildHistoryArray(grouped, days, now);
 });
 
 // Water history for insights charts — last N days, per day total in ml
 final waterHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
-  final List<double> result = [];
-  for (int i = days - 1; i >= 0; i--) {
-    final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dayEnd = dayStart.add(const Duration(days: 1));
-    final waterList = await db.getWaterLogsForDateRange(dayStart, dayEnd);
-    final total = waterList.fold<int>(0, (s, w) => s + w.amountMl);
-    result.add(total.toDouble());
-  }
-  return result;
+  final startDay = DateTime(now.year, now.month, now.day - (days - 1));
+  final endDay = DateTime(now.year, now.month, now.day + 1);
+
+  final grouped = await db.getDailyWaterForDateRange(startDay, endDay);
+  return _buildHistoryArray(grouped, days, now);
 });
 
 class DailyMacros {

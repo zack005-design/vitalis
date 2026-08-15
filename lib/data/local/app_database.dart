@@ -61,6 +61,20 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  Future<List<Map<String, dynamic>>> getDailyCaloriesForDateRange(DateTime start, DateTime end) async {
+    final query = '''
+      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(calories) AS total 
+      FROM meals 
+      WHERE timestamp >= ? AND timestamp < ? 
+      GROUP BY date
+    ''';
+    final result = await customSelect(query, variables: [
+      Variable.withDateTime(start),
+      Variable.withDateTime(end)
+    ]).get();
+    return result.map((row) => row.data).toList();
+  }
+
   // Water Log DAOs
   Stream<List<WaterLog>> watchTodayWaterLogs(DateTime day) {
     final start = DateTime(day.year, day.month, day.day);
@@ -81,6 +95,20 @@ class AppDatabase extends _$AppDatabase {
           ..where((tbl) => tbl.timestamp.isBiggerOrEqualValue(start))
           ..where((tbl) => tbl.timestamp.isSmallerThanValue(end)))
         .get();
+  }
+
+  Future<List<Map<String, dynamic>>> getDailyWaterForDateRange(DateTime start, DateTime end) async {
+    final query = '''
+      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(amount_ml) AS total 
+      FROM water_logs 
+      WHERE timestamp >= ? AND timestamp < ? 
+      GROUP BY date
+    ''';
+    final result = await customSelect(query, variables: [
+      Variable.withDateTime(start),
+      Variable.withDateTime(end)
+    ]).get();
+    return result.map((row) => row.data).toList();
   }
 
   // Sleep Notes DAOs
