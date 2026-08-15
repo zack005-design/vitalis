@@ -95,6 +95,8 @@ class BottomSheetModal extends StatelessWidget {
                         Icons.close_rounded,
                         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                       ),
+                      tooltip: "Close modal",
+                      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],

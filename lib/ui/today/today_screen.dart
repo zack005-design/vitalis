@@ -112,23 +112,34 @@ class TodayScreen extends ConsumerWidget {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16),
-          child: GestureDetector(
-            onTap: () => EditProfileSheet.show(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                  width: 1,
+          child: Semantics(
+            button: true,
+            label: "Edit Profile",
+            child: GestureDetector(
+              onTap: () => EditProfileSheet.show(context),
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      size: 22,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
                 ),
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                size: 22,
-                color: AppColors.primaryBlue,
               ),
             ),
           ),
@@ -567,36 +578,42 @@ class TodayScreen extends ConsumerWidget {
           const SizedBox(height: 14),
 
           // Dashed Log Meal Button (Matching Stitch Mockup)
-          GestureDetector(
-            onTap: () => FoodSearchSheet.show(context),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0x33171F33) : Colors.white.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? const Color(0x44FFFFFF) : const Color(0x44000000),
-                  style: BorderStyle.solid,
-                  width: 1.2,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_rounded, size: 20, color: isDark ? Colors.white : AppColors.primaryBlue),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Log Meal",
-                    style: TextStyle(
-                      fontFamily: AppTypography.jetBrainsMonoFontFamily,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : AppColors.primaryBlue,
-                      letterSpacing: 0.5,
-                    ),
+          Semantics(
+            button: true,
+            label: "Log Meal",
+            child: GestureDetector(
+              onTap: () => FoodSearchSheet.show(context),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0x33171F33) : Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? const Color(0x44FFFFFF) : const Color(0x44000000),
+                    style: BorderStyle.solid,
+                    width: 1.2,
                   ),
-                ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_rounded, size: 20, color: isDark ? Colors.white : AppColors.primaryBlue),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Log Meal",
+                      style: TextStyle(
+                        fontFamily: AppTypography.jetBrainsMonoFontFamily,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : AppColors.primaryBlue,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -607,25 +624,31 @@ class TodayScreen extends ConsumerWidget {
   }
 
   Widget _quickWaterPill(BuildContext context, WidgetRef ref, String label, int amountMl, bool isDark) {
-    return GestureDetector(
-      onTap: () => _quickAddWater(context, ref, amountMl),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-            width: 1,
+    return Semantics(
+      button: true,
+      label: "Quick add $amountMl ml water",
+      child: GestureDetector(
+        onTap: () => _quickAddWater(context, ref, amountMl),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+              width: 1,
+            ),
           ),
-        ),
-        child: Center(
-          child: Text(
-            "$label ml",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppColors.waterAccent,
+          child: Center(
+            child: Text(
+              "$label ml",
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.waterAccent,
+              ),
             ),
           ),
         ),

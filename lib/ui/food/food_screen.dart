@@ -24,44 +24,50 @@ class FoodScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Search Input Bar with Barcode Icon
-          GestureDetector(
-            onTap: () => FoodSearchSheet.show(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF171F33) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                  width: 1.2,
+          Semantics(
+            button: true,
+            label: "Search foods, meals, or dishes",
+            child: GestureDetector(
+              onTap: () => FoodSearchSheet.show(context),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF171F33) : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+                    width: 1.2,
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search_rounded, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      "Search foods, meals, or dishes...",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                child: Row(
+                  children: [
+                    Icon(Icons.search_rounded, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Search foods, meals, or dishes...",
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
-                      shape: BoxShape.circle,
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.qr_code_scanner_rounded,
+                        size: 18,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.primaryBlue,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.qr_code_scanner_rounded,
-                      size: 18,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.primaryBlue,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -216,6 +222,8 @@ class FoodScreen extends ConsumerWidget {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.delete_outline_rounded, color: AppColors.destructive, size: 20),
+                          tooltip: "Delete ${meal.name}",
+                          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                           onPressed: () async {
                             HapticFeedback.mediumImpact();
                             final db = ref.read(appDatabaseProvider);
@@ -250,39 +258,45 @@ class FoodScreen extends ConsumerWidget {
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF171F33) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-            width: 1.2,
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 110),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF171F33) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+              width: 1.2,
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+          child: Column(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 24),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : AppColors.lightTextPrimary,
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

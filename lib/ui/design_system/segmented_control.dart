@@ -36,42 +36,50 @@ class SegmentedControl<T> extends StatelessWidget {
           final isSelected = entry.key == selectedValue;
 
           return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (!isSelected) {
-                  HapticFeedback.selectionClick();
-                  onValueChanged(entry.key);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark ? const Color(0xFF222A3E) : Colors.white)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(13),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    entry.value,
-                    style: TextStyle(
-                      fontFamily: AppTypography.jetBrainsMonoFontFamily,
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected
-                          ? (isDark ? Colors.white : AppColors.primaryBlue)
-                          : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+            child: Semantics(
+              button: true,
+              selected: isSelected,
+              label: entry.value,
+              hint: isSelected ? 'Selected' : 'Double tap to select ${entry.value}',
+              child: GestureDetector(
+                onTap: () {
+                  if (!isSelected) {
+                    HapticFeedback.selectionClick();
+                    onValueChanged(entry.key);
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? (isDark ? const Color(0xFF222A3E) : Colors.white)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(13),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      entry.value,
+                      style: TextStyle(
+                        fontFamily: AppTypography.jetBrainsMonoFontFamily,
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? (isDark ? Colors.white : AppColors.primaryBlue)
+                            : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                      ),
                     ),
                   ),
                 ),

@@ -73,25 +73,30 @@ class AppButton extends StatelessWidget {
       );
     }
 
-    final button = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed == null || isLoading
-            ? null
-            : () {
-                HapticFeedback.lightImpact();
-                onPressed!();
-              },
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: onPressed == null ? bg.withValues(alpha: 0.4) : bg,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-          child: Center(
-            widthFactor: isFullWidth ? 1.0 : null,
-            child: childWidget,
+    final button = Semantics(
+      button: true,
+      enabled: onPressed != null && !isLoading,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed == null || isLoading
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onPressed!();
+                },
+          borderRadius: BorderRadius.circular(14),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: onPressed == null ? bg.withValues(alpha: 0.4) : bg,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            child: Center(
+              widthFactor: isFullWidth ? 1.0 : null,
+              child: childWidget,
+            ),
           ),
         ),
       ),

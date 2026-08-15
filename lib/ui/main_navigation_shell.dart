@@ -92,45 +92,66 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     );
   }
 
+  static const List<String> _navLabels = [
+    'Today',
+    'Sleep',
+    'Insights',
+    'Food',
+    'More',
+  ];
+
   Widget _navItem(int index, IconData icon, bool isDark) {
     final isSelected = _currentIndex == index;
+    final label = _navLabels[index];
     final activeBg = isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0);
     final activeIconColor = isDark ? Colors.white : AppColors.primaryBlue;
-    final inactiveIconColor = isDark ? const Color(0xFF8E909A) : const Color(0xFF717786);
+    final inactiveIconColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
-    return GestureDetector(
-      onTap: () {
-        if (!isSelected) {
-          HapticFeedback.selectionClick();
-          setState(() {
-            _currentIndex = index;
-          });
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        width: isSelected ? 52 : 44,
-        height: isSelected ? 52 : 44,
-        decoration: BoxDecoration(
-          color: isSelected ? activeBg : Colors.transparent,
-          shape: BoxShape.circle,
-          boxShadow: isSelected && isDark
-              ? [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            size: isSelected ? 24 : 22,
-            color: isSelected ? activeIconColor : inactiveIconColor,
+    return Semantics(
+      label: label,
+      selected: isSelected,
+      button: true,
+      hint: isSelected ? 'Currently selected tab' : 'Double tap to switch to $label tab',
+      child: GestureDetector(
+        onTap: () {
+          if (!isSelected) {
+            HapticFeedback.selectionClick();
+            setState(() {
+              _currentIndex = index;
+            });
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: 52,
+          height: 52,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: isSelected ? 52 : 44,
+              height: isSelected ? 52 : 44,
+              decoration: BoxDecoration(
+                color: isSelected ? activeBg : Colors.transparent,
+                shape: BoxShape.circle,
+                boxShadow: isSelected && isDark
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: isSelected ? 24 : 22,
+                  color: isSelected ? activeIconColor : inactiveIconColor,
+                ),
+              ),
+            ),
           ),
         ),
       ),

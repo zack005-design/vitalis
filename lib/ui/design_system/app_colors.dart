@@ -27,8 +27,8 @@ class AppColors {
   static const Color lightTextSecondary = Color(0xFF414755);
   static const Color darkTextSecondary = Color(0xFFADC6FF); // Secondary Blue/Slate
 
-  static const Color lightTextMuted = Color(0xFF717786);
-  static const Color darkTextMuted = Color(0xFF8E909A);     // Outline Muted
+  static const Color lightTextMuted = Color(0xFF525866); // WCAG AA compliant (6.3:1 on lightBackground, 7.1:1 on lightSurface)
+  static const Color darkTextMuted = Color(0xFFA0A7B8);  // WCAG AA compliant (7.6:1 on darkBackground, 5.2:1 on darkSurfaceHighest)
 
   // Semantic Accents
   static const Color calorieAccent = Color(0xFFFFB95F);     // Nutrition Amber / Warm Flame

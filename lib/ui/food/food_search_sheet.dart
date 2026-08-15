@@ -89,6 +89,8 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close_rounded, size: 22),
+                          tooltip: "Close dialog",
+                          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                           onPressed: () => Navigator.of(ctx).pop(null),
                         ),
                       ],
@@ -132,6 +134,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                         return ChoiceChip(
                           label: Text("${opt}x"),
                           selected: isSel,
+                          materialTapTargetSize: MaterialTapTargetSize.padded,
                           selectedColor: AppColors.primaryBlue,
                           backgroundColor: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
                           labelStyle: TextStyle(
@@ -356,6 +359,8 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
               if (_searchController.text.isNotEmpty)
                 IconButton(
                   icon: const Icon(Icons.clear_rounded, size: 18),
+                  tooltip: "Clear search text",
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   onPressed: () {
                     _searchController.clear();
                     ref.read(foodSearchQueryProvider.notifier).state = '';
@@ -396,8 +401,12 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
               ),
             ),
             TextButton.icon(
-              icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.primaryBlue),
+              icon: const Icon(Icons.add_rounded, size: 18, color: AppColors.primaryBlue),
               label: const Text("Custom Dish", style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(48, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 AddCustomFoodSheet.show(context);
@@ -493,33 +502,42 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
 
   Widget _filterChip(String label, bool isDark) {
     final isSelected = _selectedCategory == label;
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        setState(() => _selectedCategory = label);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryBlue
-              : (isDark ? const Color(0xFF171F33) : const Color(0xFFE2E8F0)),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: "$label category filter",
+      hint: isSelected ? 'Filter active' : 'Double tap to filter by $label',
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() => _selectedCategory = label);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primaryBlue
-                : (isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder),
-            width: 1,
+                : (isDark ? const Color(0xFF171F33) : const Color(0xFFE2E8F0)),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primaryBlue
+                  : (isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder),
+              width: 1,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected
-                ? Colors.white
-                : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+            ),
           ),
         ),
       ),
