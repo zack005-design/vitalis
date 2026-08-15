@@ -151,7 +151,7 @@ class TodayScreen extends ConsumerWidget {
                             Text(
                               "ACTIVE ENERGY",
                               style: TextStyle(
-                                fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
+                                fontFamily: AppTypography.jetBrainsMonoFontFamily,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.8,
@@ -390,7 +390,7 @@ class TodayScreen extends ConsumerWidget {
                     Text(
                       "BALANCE SCORE",
                       style: TextStyle(
-                        fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
+                        fontFamily: AppTypography.jetBrainsMonoFontFamily,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
@@ -566,7 +566,7 @@ class TodayScreen extends ConsumerWidget {
                   Text(
                     "Log Meal",
                     style: TextStyle(
-                      fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
+                      fontFamily: AppTypography.jetBrainsMonoFontFamily,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : AppColors.primaryBlue,

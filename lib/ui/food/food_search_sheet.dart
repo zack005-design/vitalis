@@ -113,7 +113,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                     Text(
                       "SERVING SIZE",
                       style: TextStyle(
-                        fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
+                        fontFamily: AppTypography.jetBrainsMonoFontFamily,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
@@ -252,7 +252,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
             Text(
               label,
               style: TextStyle(
-                fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
+                fontFamily: AppTypography.jetBrainsMonoFontFamily,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,

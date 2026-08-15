@@ -6,6 +6,7 @@ import 'app_colors.dart';
 /// Displays/Headlines: Manrope
 /// Body/Labels: Inter
 class AppTypography {
+  static final String? jetBrainsMonoFontFamily = GoogleFonts.jetBrainsMono().fontFamily;
   static TextStyle headlineLg(bool isDark) => GoogleFonts.manrope(
         fontSize: 34,
         fontWeight: FontWeight.w800,

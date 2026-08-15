@@ -66,7 +66,7 @@ class SegmentedControl<T> extends StatelessWidget {
                   child: Text(
                     entry.value,
                     style: TextStyle(
-                      fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
+                      fontFamily: AppTypography.jetBrainsMonoFontFamily,
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected
