@@ -12,15 +12,25 @@ class TierBBalanceScorer {
     required int waterTargetMl,
     required double sleepHours,
     double targetSleepHours = 8.0,
+    DateTime? currentTime,
   }) {
     if (calorieTarget <= 0 || waterTargetMl <= 0) return 75;
 
+    double timeScale = 1.0;
+    if (currentTime != null) {
+      final hoursPassed = currentTime.hour + (currentTime.minute / 60.0);
+      timeScale = (hoursPassed / 24.0).clamp(0.1, 1.0);
+    }
+
+    final scaledCalorieTarget = calorieTarget * timeScale;
+    final scaledWaterTarget = waterTargetMl * timeScale;
+
     // 1. Calorie Sub-Score (40 pts)
-    final calDiffRatio = (caloriesLogged - calorieTarget).abs() / calorieTarget;
+    final calDiffRatio = (caloriesLogged - scaledCalorieTarget).abs() / scaledCalorieTarget;
     final calorieSubScore = max(0.0, 40.0 * (1.0 - calDiffRatio * 1.2));
 
     // 2. Water Sub-Score (30 pts)
-    final waterRatio = (waterMlLogged / waterTargetMl).clamp(0.0, 1.2);
+    final waterRatio = (waterMlLogged / scaledWaterTarget).clamp(0.0, 1.2);
     final waterSubScore = min(30.0, waterRatio * 30.0);
 
     // 3. Sleep Sub-Score (30 pts)

@@ -240,6 +240,7 @@ final dailyBalanceScoreProvider = Provider<int>((ref) {
     waterMlLogged: waterLogged,
     waterTargetMl: waterTarget,
     sleepHours: sleepHours,
+    currentTime: DateTime.now(),
   );
 });
 
