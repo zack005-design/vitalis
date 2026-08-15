@@ -55,7 +55,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           // Caloric Intake Card (Stitch Spec)
           calorieDataAsync.when(
             loading: () => const SizedBox(height: 220, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox(height: 100, child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.error_outline, size: 16, color: Colors.red), SizedBox(width: 8), Text("Failed to load")]))),
             data: (calories) {
               final avgCal = calories.isEmpty ? 0.0 : calories.fold(0.0, (a, b) => a + b) / calories.length;
               final maxVal = calories.isEmpty ? 3000.0 : (calories.reduce((a, b) => a > b ? a : b) * 1.25).clamp(1500.0, 5000.0);
@@ -193,7 +193,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           // Macro Breakdown Line Chart
           macroDataAsync.when(
             loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox(height: 100, child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.error_outline, size: 16, color: Colors.red), SizedBox(width: 8), Text("Failed to load")]))),
             data: (macros) {
               final maxProtein = macros.isEmpty ? 100.0 : macros.map((m) => m.protein).reduce((a, b) => a > b ? a : b);
               final maxCarbs = macros.isEmpty ? 100.0 : macros.map((m) => m.carbs).reduce((a, b) => a > b ? a : b);
@@ -304,7 +304,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           // Daily Hydration Line Chart (Stitch Spec)
           waterDataAsync.when(
             loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox(height: 100, child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.error_outline, size: 16, color: Colors.red), SizedBox(width: 8), Text("Failed to load")]))),
             data: (water) {
               final avgWater = water.isEmpty ? 0.0 : water.fold(0.0, (a, b) => a + b) / water.length;
               final maxVal = water.isEmpty ? 3000.0 : (water.reduce((a, b) => a > b ? a : b) * 1.25).clamp(1000.0, 4000.0);
@@ -453,7 +453,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           // Sleep Duration Bar Chart
           sleepDataAsync.when(
             loading: () => const SizedBox(height: 220, child: Center(child: CircularProgressIndicator())),
-            error: (e, _) => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox(height: 100, child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.error_outline, size: 16, color: Colors.red), SizedBox(width: 8), Text("Failed to load")]))),
             data: (sleepHours) {
               final avgSleep = sleepHours.isEmpty ? 0.0 : sleepHours.fold(0.0, (a, b) => a + b) / sleepHours.length;
               final maxVal = sleepHours.isEmpty ? 8.0 : (sleepHours.reduce((a, b) => a > b ? a : b) * 1.25).clamp(8.0, 14.0);
@@ -591,7 +591,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           // Optimal Recovery Window AI Card
           ref.watch(dailyHealthInsightProvider).when(
             loading: () => const SizedBox.shrink(),
-            error: (e, _) => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox(height: 100, child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.error_outline, size: 16, color: Colors.red), SizedBox(width: 8), Text("Failed to load")]))),
             data: (insight) => GlassContainer(
               padding: const EdgeInsets.all(20),
               child: Column(
