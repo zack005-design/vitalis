@@ -20,6 +20,8 @@ class SleepScreen extends ConsumerStatefulWidget {
 class _SleepScreenState extends ConsumerState<SleepScreen> {
   String _selectedRange = '7d';
 
+  int get _limit => _selectedRange == '30d' ? 30 : 7;
+
   String _formatDuration(int minutes) {
     final h = minutes ~/ 60;
     final m = minutes % 60;
@@ -29,16 +31,17 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sleepLogsAsync = ref.watch(recentSleepLogsProvider);
+    final sleepLogsAsync = ref.watch(recentSleepLogsProvider(_limit));
 
     final logs = sleepLogsAsync.value ?? [];
     final avgMinutes = logs.isEmpty
         ? 0
         : logs.fold<int>(0, (s, e) => s + e.durationMinutes) ~/ logs.length;
     final lastEntry = logs.isNotEmpty ? logs.first : null;
+    final lastDurationMinutes = lastEntry?.durationMinutes ?? 0;
 
     const maxMinutes = 480.0;
-    final barData = logs.take(7).toList().reversed.toList();
+    final barData = logs.take(_limit).toList().reversed.toList();
 
     return AppScaffold(
       title: "Sleep",
@@ -68,7 +71,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
-                      avgMinutes > 0 ? "${avgMinutes ~/ 60}" : "0",
+                      lastDurationMinutes > 0 ? "${lastDurationMinutes ~/ 60}" : "0",
                       style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.w800,
@@ -84,7 +87,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                       ),
                     ),
                     Text(
-                      avgMinutes > 0 ? "${avgMinutes % 60}" : "0",
+                      lastDurationMinutes > 0 ? "${lastDurationMinutes % 60}" : "0",
                       style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.w800,
@@ -102,7 +105,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                   ],
                 ),
                 Text(
-                  "Last Night • Goal 8h",
+                  lastEntry != null ? "Last Night • Goal 8h" : "No sleep recorded • Goal 8h",
                   style: TextStyle(
                     fontSize: 14,
                     color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
@@ -236,16 +239,32 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
                             ],
                           ),
                         )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: barData.asMap().entries.map((entry) {
-                            final log = entry.value;
-                            final ratio = (log.durationMinutes / maxMinutes).clamp(0.08, 1.0);
-                            final dayLabel = _dayLabel(log.date);
-                            return _buildSleepBar(dayLabel, ratio, isDark);
-                          }).toList(),
-                        ),
+                      : (_limit > 7
+                          ? SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: barData.asMap().entries.map((entry) {
+                                  final log = entry.value;
+                                  final ratio = (log.durationMinutes / maxMinutes).clamp(0.08, 1.0);
+                                  final dayLabel = _dayLabel(log.date);
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                    child: _buildSleepBar(dayLabel, ratio, isDark, width: 16),
+                                  );
+                                }).toList(),
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: barData.asMap().entries.map((entry) {
+                                final log = entry.value;
+                                final ratio = (log.durationMinutes / maxMinutes).clamp(0.08, 1.0);
+                                final dayLabel = _dayLabel(log.date);
+                                return _buildSleepBar(dayLabel, ratio, isDark, width: 24);
+                              }).toList(),
+                            )),
                 ),
               ],
             ),
@@ -269,12 +288,12 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     return days[dt.weekday % 7];
   }
 
-  Widget _buildSleepBar(String dayLabel, double heightPercent, bool isDark) {
+  Widget _buildSleepBar(String dayLabel, double heightPercent, bool isDark, {double width = 24}) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Container(
-          width: 24,
+          width: width,
           height: 120 * heightPercent,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -282,7 +301,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
               end: Alignment.topCenter,
               colors: [Color(0xFF4F46E5), Color(0xFF818CF8)],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(width / 2),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF6366F1).withValues(alpha: 0.35),
@@ -296,7 +315,7 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
         Text(
           dayLabel,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: width < 20 ? 10 : 12,
             fontWeight: FontWeight.w700,
             color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
           ),

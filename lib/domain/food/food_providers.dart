@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/local/app_database.dart';
@@ -19,16 +20,45 @@ final foodSearchRepositoryProvider = Provider<FoodSearchRepository>((ref) {
   return FoodSearchRepository(db: db);
 });
 
+void _setupMidnightRollover(Ref ref, DateTime todayStart) {
+  final now = DateTime.now();
+  final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+  final delay = nextMidnight.difference(now) + const Duration(milliseconds: 200);
+  final timer = Timer(delay, () {
+    ref.invalidateSelf();
+  });
+
+  final periodicTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+    final currentNow = DateTime.now();
+    if (currentNow.day != todayStart.day ||
+        currentNow.month != todayStart.month ||
+        currentNow.year != todayStart.year) {
+      ref.invalidateSelf();
+    }
+  });
+
+  ref.onDispose(() {
+    timer.cancel();
+    periodicTimer.cancel();
+  });
+}
+
 // Today Meals Stream Provider
 final todayMealsProvider = StreamProvider<List<Meal>>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return db.watchTodayMeals(DateTime.now());
+  final now = DateTime.now();
+  final todayStart = DateTime(now.year, now.month, now.day);
+  _setupMidnightRollover(ref, todayStart);
+  return db.watchTodayMeals(todayStart);
 });
 
 // Today Water Logs Stream Provider
 final todayWaterLogsProvider = StreamProvider<List<WaterLog>>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return db.watchTodayWaterLogs(DateTime.now());
+  final now = DateTime.now();
+  final todayStart = DateTime(now.year, now.month, now.day);
+  _setupMidnightRollover(ref, todayStart);
+  return db.watchTodayWaterLogs(todayStart);
 });
 
 // Total Calories Logged Today
@@ -71,10 +101,10 @@ final lastSleepEntryProvider = Provider<SleepNote?>((ref) {
   return logs.maybeWhen(data: (list) => list.isNotEmpty ? list.first : null, orElse: () => null);
 });
 
-// Sleep logs for bar chart (last 7 entries)
-final recentSleepLogsProvider = StreamProvider<List<SleepNote>>((ref) {
+// Sleep logs for bar chart (parameterized limit, e.g. 7 or 30 entries)
+final recentSleepLogsProvider = StreamProvider.family<List<SleepNote>, int>((ref, limit) {
   final db = ref.watch(appDatabaseProvider);
-  return db.watchLastNSleepNotes(7);
+  return db.watchLastNSleepNotes(limit);
 });
 
 List<double> _buildHistoryArray(List<Map<String, dynamic>> grouped, int days, DateTime now) {
