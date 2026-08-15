@@ -58,7 +58,6 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify saved in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('profile_sex'), equals('Female'));
       expect(prefs.getString('profile_gender'), equals('Female'));
       expect(prefs.getInt('target_calories'), equals(2345));

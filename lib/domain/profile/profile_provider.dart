@@ -22,6 +22,28 @@ class UserProfile {
     required this.useAiNarration,
     required this.enableReminders,
   });
+
+  UserProfile copyWith({
+    String? name,
+    int? age,
+    double? height,
+    double? weight,
+    String? activityLevel,
+    String? sex,
+    bool? useAiNarration,
+    bool? enableReminders,
+  }) {
+    return UserProfile(
+      name: name ?? this.name,
+      age: age ?? this.age,
+      height: height ?? this.height,
+      weight: weight ?? this.weight,
+      activityLevel: activityLevel ?? this.activityLevel,
+      sex: sex ?? this.sex,
+      useAiNarration: useAiNarration ?? this.useAiNarration,
+      enableReminders: enableReminders ?? this.enableReminders,
+    );
+  }
 }
 
 class UserProfileNotifier extends StateNotifier<UserProfile> {
@@ -40,6 +62,53 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
       useAiNarration: prefs.getBool('pref_ai_narration') ?? true,
       enableReminders: prefs.getBool('pref_reminders') ?? true,
     );
+  }
+
+  Future<void> updateProfile({
+    String? name,
+    int? age,
+    double? height,
+    double? weight,
+    String? activityLevel,
+    String? sex,
+  }) async {
+    if (name != null) {
+      await prefs.setString('profile_name', name);
+    }
+    if (age != null) {
+      await prefs.setInt('profile_age', age);
+    }
+    if (height != null) {
+      await prefs.setDouble('profile_height', height);
+    }
+    if (weight != null) {
+      await prefs.setDouble('profile_weight', weight);
+    }
+    if (activityLevel != null) {
+      await prefs.setString('profile_activity', activityLevel);
+    }
+    if (sex != null) {
+      await prefs.setString('profile_sex', sex);
+      await prefs.setString('profile_gender', sex);
+    }
+    state = state.copyWith(
+      name: name,
+      age: age,
+      height: height,
+      weight: weight,
+      activityLevel: activityLevel,
+      sex: sex,
+    );
+  }
+
+  Future<void> setAiNarration(bool value) async {
+    await prefs.setBool('pref_ai_narration', value);
+    state = state.copyWith(useAiNarration: value);
+  }
+
+  Future<void> setReminders(bool value) async {
+    await prefs.setBool('pref_reminders', value);
+    state = state.copyWith(enableReminders: value);
   }
 
   void reload() {

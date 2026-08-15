@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/profile/profile_provider.dart';
 import '../../domain/food/food_providers.dart';
 import '../../domain/profile/bmr_calculator.dart';
 import '../design_system/app_button.dart';
@@ -27,33 +27,25 @@ class EditProfileSheet extends ConsumerStatefulWidget {
 }
 
 class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
-  final _nameController = TextEditingController(text: "Alex Johnson");
-  final _ageController = TextEditingController(text: "28");
-  final _heightController = TextEditingController(text: "175");
-  final _weightController = TextEditingController(text: "72");
+  late final TextEditingController _nameController;
+  late final TextEditingController _ageController;
+  late final TextEditingController _heightController;
+  late final TextEditingController _weightController;
 
-  String _sex = "Male";
-  String _activityLevel = "Moderate";
+  late String _sex;
+  late String _activityLevel;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
-  }
-
-  Future<void> _loadProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _nameController.text = prefs.getString('profile_name') ?? "Alex Johnson";
-        _ageController.text = (prefs.getInt('profile_age') ?? 28).toString();
-        _heightController.text = (prefs.getDouble('profile_height') ?? 175.0).toStringAsFixed(0);
-        _weightController.text = (prefs.getDouble('profile_weight') ?? 72.0).toStringAsFixed(0);
-        _sex = prefs.getString('profile_sex') ?? prefs.getString('profile_gender') ?? "Male";
-        _activityLevel = prefs.getString('profile_activity') ?? "Moderate";
-      });
-    }
+    final profile = ref.read(userProfileProvider);
+    _nameController = TextEditingController(text: profile.name);
+    _ageController = TextEditingController(text: profile.age.toString());
+    _heightController = TextEditingController(text: profile.height.toStringAsFixed(0));
+    _weightController = TextEditingController(text: profile.weight.toStringAsFixed(0));
+    _sex = profile.sex;
+    _activityLevel = profile.activityLevel;
   }
 
   @override
@@ -82,14 +74,18 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   Future<void> _save() async {
     setState(() => _isSaving = true);
     final tdee = _calculatedTdee;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profile_name', _nameController.text.trim());
-    await prefs.setInt('profile_age', int.tryParse(_ageController.text) ?? 28);
-    await prefs.setDouble('profile_height', double.tryParse(_heightController.text) ?? 175);
-    await prefs.setDouble('profile_weight', double.tryParse(_weightController.text) ?? 72);
-    await prefs.setString('profile_sex', _sex);
-    await prefs.setString('profile_gender', _sex);
-    await prefs.setString('profile_activity', _activityLevel);
+    final age = int.tryParse(_ageController.text) ?? 28;
+    final height = double.tryParse(_heightController.text) ?? 175;
+    final weight = double.tryParse(_weightController.text) ?? 72;
+
+    await ref.read(userProfileProvider.notifier).updateProfile(
+      name: _nameController.text.trim(),
+      age: age,
+      height: height,
+      weight: weight,
+      sex: _sex,
+      activityLevel: _activityLevel,
+    );
     await ref.read(calorieTargetProvider.notifier).setTarget(tdee);
 
     if (mounted) {

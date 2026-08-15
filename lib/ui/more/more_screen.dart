@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/export/json_backup_service.dart';
 import '../../data/health/health_connect_client.dart';
 import '../../domain/food/food_providers.dart';
@@ -25,22 +24,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   @override
   void initState() {
     super.initState();
-  }
-
-  Future<void> _saveAiNarration(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('pref_ai_narration', value);
-  }
-
-  Future<void> _saveReminders(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('pref_reminders', value);
-    final svc = NotificationService();
-    if (value) {
-      await svc.scheduleHourlyWaterReminders();
-    } else {
-      await svc.cancelAllReminders();
-    }
   }
 
   Future<void> _exportData() async {
@@ -177,7 +160,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             padding: const EdgeInsets.all(18),
             onTap: () async {
               await EditProfileSheet.show(context);
-              ref.read(userProfileProvider.notifier).reload();
             },
             child: Row(
               children: [
@@ -270,7 +252,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   subtitle: "Daily Target: $calorieTarget kcal • ${(waterTarget / 1000).toStringAsFixed(1)}L",
                   onTap: () async {
                     await EditProfileSheet.show(context);
-                    ref.read(userProfileProvider.notifier).reload();
                   },
                 ),
                 _buildDivider(isDark),
@@ -282,7 +263,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   subtitle: "$_activityLevel activity tier",
                   onTap: () async {
                     await EditProfileSheet.show(context);
-                    ref.read(userProfileProvider.notifier).reload();
                   },
                 ),
               ],
@@ -343,9 +323,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   title: "On-Device AI Insights",
                   subtitle: "Use Gemini Nano when available (Tier C)",
                   value: _useAiNarration,
-                  onChanged: (val) {
-                    _saveAiNarration(val);
-                    ref.read(userProfileProvider.notifier).reload();
+                  onChanged: (val) async {
+                    await ref.read(userProfileProvider.notifier).setAiNarration(val);
                   },
                 ),
                 _buildDivider(isDark),
@@ -356,9 +335,18 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   title: "Offline Reminder Alarms",
                   subtitle: "Water logging & evening sleep wind-down",
                   value: _enableReminders,
-                  onChanged: (val) {
-                    _saveReminders(val);
-                    ref.read(userProfileProvider.notifier).reload();
+                  onChanged: (val) async {
+                    await ref.read(userProfileProvider.notifier).setReminders(val);
+                    try {
+                      final svc = NotificationService();
+                      if (val) {
+                        await svc.scheduleHourlyWaterReminders();
+                      } else {
+                        await svc.cancelAllReminders();
+                      }
+                    } catch (e) {
+                      debugPrint('Notification toggle error: $e');
+                    }
                   },
                 ),
               ],
