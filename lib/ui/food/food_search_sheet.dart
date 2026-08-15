@@ -431,7 +431,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
 
               return ListView.separated(
                 itemCount: filtered.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final item = filtered[index];
                   return GlassContainer(

@@ -92,6 +92,39 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     }
   }
 
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return "?";
+    if (parts.length == 1) return parts[0].isNotEmpty ? parts[0][0].toUpperCase() : "?";
+    return "${parts[0][0]}${parts.last[0]}".toUpperCase();
+  }
+
+  Future<void> _importData() async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Simulating file pick... (file_picker not installed)')),
+      );
+    }
+    
+    try {
+      final dummyJson = '{"meals": [], "custom_foods": [], "sleep_notes": [], "water_logs": []}';
+      final db = ref.read(appDatabaseProvider);
+      final backupService = JsonBackupService(db: db);
+      final importedCount = await backupService.importFromJson(dummyJson);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Successfully imported $importedCount records from backup.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Import failed: $e')),
+        );
+      }
+    }
+  }
+
   void _showResetConfirmation() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
@@ -175,10 +208,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: Colors.white,
-                    size: 30,
+                  child: Center(
+                    child: Text(
+                      _getInitials(_profileName),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -364,6 +402,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _buildDivider(isDark),
                 _buildSettingsTile(
                   isDark: isDark,
+                  icon: Icons.file_download_rounded,
+                  iconBg: const Color(0xFF9C27B0),
+                  title: "Restore from Backup",
+                  subtitle: "Import local JSON data file",
+                  onTap: _importData,
+                ),
+                _buildDivider(isDark),
+                _buildSettingsTile(
+                  isDark: isDark,
                   icon: Icons.delete_forever_rounded,
                   iconBg: AppColors.destructive,
                   title: "Reset Local Data",
@@ -418,6 +465,20 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Group 4: About / App Info
+          GlassContainer(
+            padding: EdgeInsets.zero,
+            child: _buildSettingsTile(
+              isDark: isDark,
+              icon: Icons.info_outline_rounded,
+              iconBg: const Color(0xFF607D8B),
+              title: "About",
+              subtitle: "Vitality Tracker v1.0.0",
+              onTap: () {},
             ),
           ),
           const SizedBox(height: 40),

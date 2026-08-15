@@ -473,7 +473,7 @@ class TodayScreen extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: mealList.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final meal = mealList[index];
                   return SwipeToDeleteRow(

@@ -107,6 +107,50 @@ final waterHistoryProvider = FutureProvider.family<List<double>, int>((ref, days
   return result;
 });
 
+class DailyMacros {
+  final double protein;
+  final double carbs;
+  final double fat;
+  const DailyMacros({this.protein = 0, this.carbs = 0, this.fat = 0});
+}
+
+// Macro history for insights charts — last N days, per day totals
+final macroHistoryProvider = FutureProvider.family<List<DailyMacros>, int>((ref, days) async {
+  final db = ref.watch(appDatabaseProvider);
+  final now = DateTime.now();
+  final List<DailyMacros> result = [];
+  for (int i = days - 1; i >= 0; i--) {
+    final dayStart = DateTime(now.year, now.month, now.day - i);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+    final mealList = await db.getMealsForDateRange(dayStart, dayEnd);
+    double protein = 0;
+    double carbs = 0;
+    double fat = 0;
+    for (final m in mealList) {
+      protein += m.proteinG ?? 0;
+      carbs += m.carbsG ?? 0;
+      fat += m.fatG ?? 0;
+    }
+    result.add(DailyMacros(protein: protein, carbs: carbs, fat: fat));
+  }
+  return result;
+});
+
+// Sleep history for insights charts — last N days, per day total in hours
+final sleepHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
+  final db = ref.watch(appDatabaseProvider);
+  final now = DateTime.now();
+  final List<double> result = [];
+  for (int i = days - 1; i >= 0; i--) {
+    final dayStart = DateTime(now.year, now.month, now.day - i);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+    final sleepList = await db.getSleepNotesForDateRange(dayStart, dayEnd);
+    final totalMin = sleepList.fold<int>(0, (s, n) => s + n.durationMinutes);
+    result.add(totalMin / 60.0);
+  }
+  return result;
+});
+
 // Dynamic User Calorie Target Provider (Mifflin-St Jeor / Profile-linked)
 class CalorieTargetNotifier extends StateNotifier<int> {
   CalorieTargetNotifier() : super(2200) {
