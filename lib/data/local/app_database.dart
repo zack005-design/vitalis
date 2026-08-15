@@ -14,6 +14,7 @@ part 'app_database.g.dart';
 @DriftDatabase(tables: [Meals, CustomFoods, SleepNotes, WaterLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+  AppDatabase.forTesting(super.e);
 
   @override
   int get schemaVersion => 4;
@@ -73,6 +74,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> insertWaterLog(WaterLogsCompanion log) => into(waterLogs).insert(log);
   Future<int> deleteWaterLog(int id) => (delete(waterLogs)..where((tbl) => tbl.id.equals(id))).go();
+  Future<List<WaterLog>> getAllWaterLogs() => select(waterLogs).get();
 
   Future<List<WaterLog>> getWaterLogsForDateRange(DateTime start, DateTime end) {
     return (select(waterLogs)
@@ -93,6 +95,8 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  Future<List<SleepNote>> getAllSleepNotes() => select(sleepNotes).get();
+
   Future<List<SleepNote>> getSleepNotesForDateRange(DateTime start, DateTime end) {
     return (select(sleepNotes)
           ..where((tbl) => tbl.date.isBiggerOrEqualValue(start))
@@ -106,6 +110,8 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<CustomFood>> watchCustomFoods() {
     return (select(customFoods)..orderBy([(tbl) => OrderingTerm.desc(tbl.createdAt)])).watch();
   }
+
+  Future<List<CustomFood>> getAllCustomFoods() => select(customFoods).get();
 
   Future<int> insertCustomFood(CustomFoodsCompanion food) => into(customFoods).insert(food);
 
