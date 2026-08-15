@@ -1,4 +1,3 @@
-import 'package:calorie_sleep_tracker/domain/food/food_providers.dart';
 import 'package:calorie_sleep_tracker/ui/design_system/bottom_sheet_modal.dart';
 import 'package:calorie_sleep_tracker/ui/design_system/swipe_to_delete_row.dart';
 import 'package:calorie_sleep_tracker/ui/more/edit_profile_sheet.dart';

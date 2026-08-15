@@ -15,8 +15,8 @@ description: Manages runtime tier selection across Tier A (rule-based Dart templ
 | Tier | Role | Capability Requirement | Primary Target Status |
 |---|---|---|---|
 | **Tier A** | Pure Math Rules & Templated Insights | None (Pure Dart) | ✅ Always Available (Fallback Baseline) |
-| **Tier B** | Daily Balance Score (Formula or TFLite) | Any Android / NPU NNAPI Delegate | ✅ Available (MediaTek Dimensity 8500-Ultra NPU) |
-| **Tier C** | Natural Language Narration | Gemini Nano / AICore Official Support | ❌ Feature-Detected at Runtime (Unsupported $\rightarrow$ Tier A) |
+| **Tier B** | Daily Balance Score (Formula or TFLite) | Any Android / NPU NNAPI Delegate | ✅ Available (MediaTek Dimensity APU / NPU) |
+| **Tier C** | On-Device NPU Narration & Insights | MediaTek APU / Android NNAPI / On-Device AI | ✅ Available (100% Offline, Zero Cloud Limits) |
 
 ## Code Pattern: AI Coordinator Gateway
 

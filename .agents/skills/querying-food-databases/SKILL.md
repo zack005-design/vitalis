@@ -15,7 +15,8 @@ description: Handles tiered food database resolution across local INDB datasets 
 1. **User History & Custom Foods** (`meals`, `custom_foods` in Drift SQLite)
 2. **Bundled INDB Dataset Asset** (`assets/data/indb_kerala_foods.json`)
 3. **Open Food Facts API** (`https://world.openfoodfacts.org/api/v2/search`)
-4. **Manual Entry** (Fallback form)
+4. **USDA FoodData Central API** (`https://api.nal.usda.gov/fdc/v1/foods/search`)
+5. **Manual Entry** (Fallback form)
 
 ## Open Food Facts REST Client Pattern
 

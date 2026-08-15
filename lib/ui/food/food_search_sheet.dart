@@ -1,4 +1,3 @@
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';

@@ -144,11 +144,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     final waterTarget = ref.watch(waterTargetProvider);
     final userProfile = ref.watch(userProfileProvider);
     
-    final _profileName = userProfile.name;
-    final _activityLevel = userProfile.activityLevel;
-    final _profileDetails = "${userProfile.sex} • ${userProfile.age} yrs • ${userProfile.height.toStringAsFixed(0)} cm • ${userProfile.weight.toStringAsFixed(0)} kg • ${userProfile.activityLevel}";
-    final _useAiNarration = userProfile.useAiNarration;
-    final _enableReminders = userProfile.enableReminders;
+    final profileName = userProfile.name;
+    final activityLevel = userProfile.activityLevel;
+    final profileDetails = "${userProfile.sex} • ${userProfile.age} yrs • ${userProfile.height.toStringAsFixed(0)} cm • ${userProfile.weight.toStringAsFixed(0)} kg • ${userProfile.activityLevel}";
+    final useAiNarration = userProfile.useAiNarration;
+    final enableReminders = userProfile.enableReminders;
 
     return AppScaffold(
       title: "Settings",
@@ -183,7 +183,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      _getInitials(_profileName),
+                      _getInitials(profileName),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -198,7 +198,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _profileName,
+                        profileName,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -207,7 +207,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        _profileDetails,
+                        profileDetails,
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
@@ -260,7 +260,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   icon: Icons.directions_run_rounded,
                   iconBg: AppColors.primaryBlue,
                   title: "Activity Level",
-                  subtitle: "$_activityLevel activity tier",
+                  subtitle: "$activityLevel activity tier",
                   onTap: () async {
                     await EditProfileSheet.show(context);
                   },
@@ -322,7 +322,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   iconBg: const Color(0xFFAF52DE),
                   title: "On-Device AI Insights",
                   subtitle: "Use Gemini Nano when available (Tier C)",
-                  value: _useAiNarration,
+                  value: useAiNarration,
                   onChanged: (val) async {
                     await ref.read(userProfileProvider.notifier).setAiNarration(val);
                   },
@@ -334,7 +334,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   iconBg: const Color(0xFFFF9500),
                   title: "Offline Reminder Alarms",
                   subtitle: "Water logging & evening sleep wind-down",
-                  value: _enableReminders,
+                  value: enableReminders,
                   onChanged: (val) async {
                     await ref.read(userProfileProvider.notifier).setReminders(val);
                     try {
