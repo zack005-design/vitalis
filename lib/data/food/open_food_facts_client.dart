@@ -21,8 +21,17 @@ class OpenFoodItem {
 
 class OpenFoodFactsClient {
   final http.Client _client;
+  final bool _ownsClient;
 
-  OpenFoodFactsClient({http.Client? client}) : _client = client ?? http.Client();
+  OpenFoodFactsClient({http.Client? client}) 
+      : _client = client ?? http.Client(),
+        _ownsClient = client == null;
+
+  void dispose() {
+    if (_ownsClient) {
+      _client.close();
+    }
+  }
 
   Future<List<OpenFoodItem>> searchPackagedFoods(String query) async {
     if (query.trim().isEmpty) return [];
@@ -32,7 +41,12 @@ class OpenFoodFactsClient {
     );
 
     try {
-      final response = await _client.get(uri).timeout(const Duration(seconds: 4));
+      final response = await _client.get(
+        uri,
+        headers: {
+          'User-Agent': 'VitalityTracker/1.0 (contact@example.com)',
+        },
+      ).timeout(const Duration(seconds: 4));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data['products'] as List? ?? [];

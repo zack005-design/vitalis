@@ -13,6 +13,7 @@ import '../design_system/app_typography.dart';
 import '../design_system/bottom_sheet_modal.dart';
 import '../design_system/glass_container.dart';
 import 'add_custom_food_sheet.dart';
+import 'dart:async';
 
 class FoodSearchSheet extends ConsumerStatefulWidget {
   const FoodSearchSheet({super.key});
@@ -32,9 +33,11 @@ class FoodSearchSheet extends ConsumerStatefulWidget {
 class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
   final _searchController = TextEditingController();
   String _selectedCategory = 'All';
+  Timer? _debounceTimer;
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -341,7 +344,14 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                     hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                     border: InputBorder.none,
                   ),
-                  onChanged: (val) => ref.read(foodSearchQueryProvider.notifier).state = val,
+                  onChanged: (val) {
+                    _debounceTimer?.cancel();
+                    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+                      if (mounted) {
+                        ref.read(foodSearchQueryProvider.notifier).state = val;
+                      }
+                    });
+                  },
                 ),
               ),
               if (_searchController.text.isNotEmpty)
@@ -537,6 +547,10 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
       case FoodSearchSource.openFoodFacts:
         label = "OFF";
         color = const Color(0xFFAF52DE);
+        break;
+      case FoodSearchSource.usda:
+        label = "USDA";
+        color = const Color(0xFF34C759);
         break;
     }
 

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 /// Drift SQLite Table definition for logged meals.
+@TableIndex(name: 'meals_timestamp_idx', columns: {#timestamp})
 class Meals extends Table {
   IntColumn get id => integer().autoIncrement()();
   DateTimeColumn get timestamp => dateTime()();

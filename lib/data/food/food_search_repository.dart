@@ -1,8 +1,9 @@
 import 'indb_food_loader.dart';
 import 'open_food_facts_client.dart';
+import 'usda_food_client.dart';
 import '../local/app_database.dart';
 
-enum FoodSearchSource { history, custom, indbLocal, openFoodFacts }
+enum FoodSearchSource { history, custom, indbLocal, openFoodFacts, usda }
 
 class FoodSearchResult {
   final String name;
@@ -27,16 +28,19 @@ class FoodSearchResult {
 class FoodSearchRepository {
   final IndbFoodLoader _indbLoader;
   final OpenFoodFactsClient _openFoodClient;
+  final UsdaFoodClient _usdaClient;
   final AppDatabase db;
 
   FoodSearchRepository({
     IndbFoodLoader? indbLoader,
     OpenFoodFactsClient? openFoodClient,
+    UsdaFoodClient? usdaClient,
     required this.db,
   })  : _indbLoader = indbLoader ?? IndbFoodLoader(),
-        _openFoodClient = openFoodClient ?? OpenFoodFactsClient();
+        _openFoodClient = openFoodClient ?? OpenFoodFactsClient(),
+        _usdaClient = usdaClient ?? UsdaFoodClient();
 
-  /// Tiered resolution: History/Custom -> Local INDB -> Open Food Facts
+  /// Tiered resolution: History/Custom -> Local INDB -> Open Food Facts -> USDA FoodData
   Future<List<FoodSearchResult>> search(String query) async {
     final results = <FoodSearchResult>[];
     final cleanQuery = query.trim().toLowerCase();
@@ -83,8 +87,27 @@ class FoodSearchRepository {
           source: FoodSearchSource.openFoodFacts,
         ));
       }
+
+      // Step 4: USDA FoodData Central API (generic & raw foods)
+      final usdaItems = await _usdaClient.searchFoods(query);
+      for (final u in usdaItems) {
+        results.add(FoodSearchResult(
+          name: u.name,
+          calories: u.calories,
+          proteinG: u.proteinG,
+          carbsG: u.carbsG,
+          fatG: u.fatG,
+          servingDescription: u.servingDescription,
+          source: FoodSearchSource.usda,
+        ));
+      }
     }
 
     return results;
   }
+
+  void dispose() {
+    _openFoodClient.dispose();
+  }
 }
+

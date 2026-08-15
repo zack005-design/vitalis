@@ -1582,12 +1582,25 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CustomFoodsTable customFoods = $CustomFoodsTable(this);
   late final $SleepNotesTable sleepNotes = $SleepNotesTable(this);
   late final $WaterLogsTable waterLogs = $WaterLogsTable(this);
+  late final Index mealsTimestampIdx = Index('meals_timestamp_idx',
+      'CREATE INDEX meals_timestamp_idx ON meals (timestamp)');
+  late final Index sleepDateIdx = Index(
+      'sleep_date_idx', 'CREATE INDEX sleep_date_idx ON sleep_notes (date)');
+  late final Index waterTimestampIdx = Index('water_timestamp_idx',
+      'CREATE INDEX water_timestamp_idx ON water_logs (timestamp)');
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [meals, customFoods, sleepNotes, waterLogs];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        meals,
+        customFoods,
+        sleepNotes,
+        waterLogs,
+        mealsTimestampIdx,
+        sleepDateIdx,
+        waterTimestampIdx
+      ];
 }
 
 typedef $$MealsTableCreateCompanionBuilder = MealsCompanion Function({

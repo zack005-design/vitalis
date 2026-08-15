@@ -18,7 +18,9 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 // Food Search Repository Provider
 final foodSearchRepositoryProvider = Provider<FoodSearchRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return FoodSearchRepository(db: db);
+  final repo = FoodSearchRepository(db: db);
+  ref.onDispose(() => repo.dispose());
+  return repo;
 });
 
 void _setupMidnightRollover(Ref ref, DateTime todayStart) {

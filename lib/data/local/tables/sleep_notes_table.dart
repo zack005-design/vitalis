@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 /// Drift SQLite Table definition for sleep session logs.
+@TableIndex(name: 'sleep_date_idx', columns: {#date})
 class SleepNotes extends Table {
   IntColumn get id => integer().autoIncrement()();
   /// Date of the sleep session (night started)
