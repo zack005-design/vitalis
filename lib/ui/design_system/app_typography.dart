@@ -35,6 +35,17 @@ class AppTypography {
         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       );
 
+  static TextStyle monoSm(bool isDark) => GoogleFonts.jetBrainsMono(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
+        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      );
+
+  static TextStyle mono(bool isDark) => GoogleFonts.jetBrainsMono(
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+      );
+
   static TextStyle bodyLg(bool isDark) => GoogleFonts.inter(
         fontSize: 17,
         fontWeight: FontWeight.w400,

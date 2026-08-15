@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -150,7 +151,7 @@ class TodayScreen extends ConsumerWidget {
                             Text(
                               "ACTIVE ENERGY",
                               style: TextStyle(
-                                fontFamily: "JetBrains Mono",
+                                fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.8,
@@ -389,7 +390,7 @@ class TodayScreen extends ConsumerWidget {
                     Text(
                       "BALANCE SCORE",
                       style: TextStyle(
-                        fontFamily: "JetBrains Mono",
+                        fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
@@ -565,7 +566,7 @@ class TodayScreen extends ConsumerWidget {
                   Text(
                     "Log Meal",
                     style: TextStyle(
-                      fontFamily: "JetBrains Mono",
+                      fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : AppColors.primaryBlue,

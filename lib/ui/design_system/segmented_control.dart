@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app_colors.dart';
@@ -65,7 +66,7 @@ class SegmentedControl<T> extends StatelessWidget {
                   child: Text(
                     entry.value,
                     style: TextStyle(
-                      fontFamily: "JetBrains Mono",
+                      fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected

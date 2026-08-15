@@ -12,6 +12,7 @@ class GlassContainer extends StatelessWidget {
   final Color? customBackgroundColor;
   final Color? borderColor;
   final VoidCallback? onTap;
+  final bool enableBlur;
 
   const GlassContainer({
     super.key,
@@ -23,6 +24,7 @@ class GlassContainer extends StatelessWidget {
     this.customBackgroundColor,
     this.borderColor,
     this.onTap,
+    this.enableBlur = true,
   });
 
   @override
@@ -35,28 +37,35 @@ class GlassContainer extends StatelessWidget {
     final border = borderColor ??
         (isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder);
 
-    Widget content = ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurAmount, sigmaY: blurAmount),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: border, width: 1.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                blurRadius: 24,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    Widget innerContainer = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(color: border, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 4),
           ),
-          child: child,
-        ),
+        ],
       ),
+      child: child,
     );
+
+    Widget content;
+    if (enableBlur) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurAmount, sigmaY: blurAmount),
+          child: innerContainer,
+        ),
+      );
+    } else {
+      content = innerContainer;
+    }
 
     if (margin != null) {
       content = Padding(padding: margin!, child: content);

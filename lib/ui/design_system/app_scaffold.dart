@@ -11,6 +11,7 @@ class AppScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final Widget? floatingActionButton;
   final bool showLargeTitle;
+  final bool isScrollable;
 
   const AppScaffold({
     super.key,
@@ -19,6 +20,7 @@ class AppScaffold extends StatelessWidget {
     this.actions,
     this.floatingActionButton,
     this.showLargeTitle = true,
+    this.isScrollable = false,
   });
 
   @override
@@ -98,9 +100,9 @@ class AppScaffold extends StatelessWidget {
           // Main Scroll Content optimized for 120Hz/144Hz HyperOS displays
           SafeArea(
             bottom: false,
-            child: CustomScrollView(
+            child: NestedScrollView(
               physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
                 if (showLargeTitle)
                   SliverAppBar(
                     expandedHeight: 90.0,
@@ -140,11 +142,11 @@ class AppScaffold extends StatelessWidget {
                     elevation: 0,
                     actions: actions,
                   ),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 96 + bottomInset),
-                  sliver: SliverToBoxAdapter(child: body),
-                ),
               ],
+              body: Padding(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 96 + bottomInset),
+                child: isScrollable ? body : SingleChildScrollView(child: body),
+              ),
             ),
           ),
         ],

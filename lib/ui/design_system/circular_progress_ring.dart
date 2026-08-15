@@ -53,11 +53,13 @@ class BentoConcentricRings extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                CustomPaint(
-                  size: const Size(200, 200),
-                  painter: _ConcentricRingPainter(
-                    calorieProgress: calorieProgress.clamp(0.0, 1.0),
-                    waterProgress: waterProgress.clamp(0.0, 1.0),
+                RepaintBoundary(
+                  child: CustomPaint(
+                    size: const Size(200, 200),
+                    painter: _ConcentricRingPainter(
+                      calorieProgress: (calorieProgress.isNaN || calorieProgress.isInfinite) ? 0.0 : calorieProgress.clamp(0.0, 1.0),
+                      waterProgress: (waterProgress.isNaN || waterProgress.isInfinite) ? 0.0 : waterProgress.clamp(0.0, 1.0),
+                    ),
                   ),
                 ),
                 // Center Display Text

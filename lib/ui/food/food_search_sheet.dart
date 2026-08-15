@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
@@ -112,7 +113,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                     Text(
                       "SERVING SIZE",
                       style: TextStyle(
-                        fontFamily: "JetBrains Mono",
+                        fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
@@ -251,7 +252,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
             Text(
               label,
               style: TextStyle(
-                fontFamily: "JetBrains Mono",
+                fontFamily: GoogleFonts.jetBrainsMono().fontFamily,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
