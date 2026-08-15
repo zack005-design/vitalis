@@ -128,15 +128,20 @@ class HealthConnectClient {
     double? carbsG,
     double? fatG,
     required DateTime timestamp,
+    MealType mealType = MealType.UNKNOWN,
+    String? name,
   }) async {
     try {
       await _ensureConfigured();
-      return await _health.writeHealthData(
-        value: calories.toDouble(),
-        type: HealthDataType.NUTRITION,
+      return await _health.writeMeal(
+        mealType: mealType,
         startTime: timestamp,
         endTime: timestamp,
-        unit: HealthDataUnit.KILOCALORIE,
+        caloriesConsumed: calories.toDouble(),
+        protein: proteinG,
+        carbohydrates: carbsG,
+        fatTotal: fatG,
+        name: name,
       );
     } catch (_) {
       return false;

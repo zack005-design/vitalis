@@ -1,10 +1,16 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin;
+
+  NotificationService({FlutterLocalNotificationsPlugin? notificationsPlugin})
+      : _notificationsPlugin =
+            notificationsPlugin ?? FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
+    tz.initializeTimeZones();
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
     await _notificationsPlugin.initialize(settings: initSettings);
@@ -64,7 +70,10 @@ class NotificationService {
   }
 
   /// Schedule evening sleep wind-down reminder
-  Future<void> scheduleSleepWindDownPrompt() async {
+  Future<void> scheduleSleepWindDownPrompt({
+    int hour = 21,
+    int minute = 30,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'sleep_reminders_channel',
       'Sleep Reminders',
@@ -74,11 +83,27 @@ class NotificationService {
     );
     const details = NotificationDetails(android: androidDetails);
 
-    await _notificationsPlugin.show(
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _notificationsPlugin.zonedSchedule(
       id: 99,
       title: 'Evening Wind-Down',
       body: "Ready for rest? Take a moment to log your evening meals & notes.",
+      scheduledDate: scheduledDate,
       notificationDetails: details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 }
