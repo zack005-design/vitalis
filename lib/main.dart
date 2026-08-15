@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,25 +7,38 @@ import 'ui/design_system/app_colors.dart';
 import 'ui/main_navigation_shell.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().initialize();
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    try {
+      await NotificationService().initialize();
+    } catch (e, stackTrace) {
+      debugPrint('NotificationService initialization failed: $e\n$stackTrace');
+    }
 
-  runApp(
-    const ProviderScope(
-      child: CalorieSleepTrackerApp(),
-    ),
-  );
+    try {
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+      );
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } catch (e, stackTrace) {
+      debugPrint('SystemChrome configuration failed: $e\n$stackTrace');
+    }
+
+    runApp(
+      const ProviderScope(
+        child: CalorieSleepTrackerApp(),
+      ),
+    );
+  }, (error, stackTrace) {
+    debugPrint('Unhandled error in runZonedGuarded: $error\n$stackTrace');
+  });
 }
 
 class CalorieSleepTrackerApp extends StatelessWidget {
