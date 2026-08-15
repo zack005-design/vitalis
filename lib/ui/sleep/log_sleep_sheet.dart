@@ -10,6 +10,52 @@ import '../design_system/app_typography.dart';
 import '../design_system/bottom_sheet_modal.dart';
 import '../design_system/glass_container.dart';
 
+class SleepRange {
+  final DateTime bed;
+  final DateTime wake;
+
+  const SleepRange({required this.bed, required this.wake});
+
+  int get durationMinutes => wake.difference(bed).inMinutes;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SleepRange &&
+          runtimeType == other.runtimeType &&
+          bed == other.bed &&
+          wake == other.wake;
+
+  @override
+  int get hashCode => bed.hashCode ^ wake.hashCode;
+
+  @override
+  String toString() => 'SleepRange(bed: $bed, wake: $wake)';
+}
+
+/// Calculates [SleepRange] (bed and wake [DateTime]s) given [bedtime] and [wakeTime].
+///
+/// If bedtime is in the evening and wake time is in the morning (overnight sleep),
+/// bedtime is anchored to yesterday's date so it does not calculate into the future.
+/// If bedtime is later today than [now] (e.g., logging yesterday's nap in the morning),
+/// both timestamps are shifted to yesterday.
+SleepRange calculateSleepRange(TimeOfDay bedtime, TimeOfDay wakeTime, {DateTime? now}) {
+  final current = now ?? DateTime.now();
+  var bed = DateTime(current.year, current.month, current.day, bedtime.hour, bedtime.minute);
+  var wake = DateTime(current.year, current.month, current.day, wakeTime.hour, wakeTime.minute);
+
+  if (wake.isBefore(bed)) {
+    // Bedtime was yesterday (overnight sleep crossing midnight)
+    bed = bed.subtract(const Duration(days: 1));
+  } else if (bed.isAfter(current)) {
+    // Bedtime is currently in the future today (e.g. logging yesterday's nap)
+    bed = bed.subtract(const Duration(days: 1));
+    wake = wake.subtract(const Duration(days: 1));
+  }
+
+  return SleepRange(bed: bed, wake: wake);
+}
+
 class LogSleepSheet extends ConsumerStatefulWidget {
   const LogSleepSheet({super.key});
 
@@ -38,11 +84,7 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
   }
 
   int get _durationMinutes {
-    final now = DateTime.now();
-    var bed = DateTime(now.year, now.month, now.day, _bedtime.hour, _bedtime.minute);
-    var wake = DateTime(now.year, now.month, now.day, _wakeTime.hour, _wakeTime.minute);
-    if (wake.isBefore(bed)) wake = wake.add(const Duration(days: 1));
-    return wake.difference(bed).inMinutes;
+    return calculateSleepRange(_bedtime, _wakeTime).durationMinutes;
   }
 
   String get _durationLabel {
@@ -67,16 +109,16 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
     try {
       final db = ref.read(appDatabaseProvider);
       final now = DateTime.now();
-      final bed = DateTime(now.year, now.month, now.day, _bedtime.hour, _bedtime.minute);
-      var wake = DateTime(now.year, now.month, now.day, _wakeTime.hour, _wakeTime.minute);
-      if (wake.isBefore(bed)) wake = wake.add(const Duration(days: 1));
+      final range = calculateSleepRange(_bedtime, _wakeTime, now: now);
+      final bed = range.bed;
+      final wake = range.wake;
 
       await db.insertSleepNote(
         SleepNotesCompanion(
-          date: drift.Value(now),
+          date: drift.Value(wake),
           bedtime: drift.Value(bed),
           wakeTime: drift.Value(wake),
-          durationMinutes: drift.Value(_durationMinutes),
+          durationMinutes: drift.Value(range.durationMinutes),
           noteText: drift.Value(_noteController.text.trim()),
           createdAt: drift.Value(now),
         ),
