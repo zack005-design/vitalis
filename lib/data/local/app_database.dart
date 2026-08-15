@@ -32,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
             debugPrint('Migration error (waterLogs.amountMl): $e');
           }
         }
-        if (from < 4) {
+        if (from == 3) {
           // Add new columns to sleep_notes
           try {
             await m.addColumn(sleepNotes, sleepNotes.bedtime);
@@ -80,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Map<String, dynamic>>> getDailyCaloriesForDateRange(DateTime start, DateTime end) async {
     final query = '''
-      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(calories) AS total 
+      SELECT strftime('%Y-%m-%d', timestamp/1000, 'unixepoch', 'localtime') AS date, SUM(calories) AS total 
       FROM meals 
       WHERE timestamp >= ? AND timestamp < ? 
       GROUP BY date
@@ -116,7 +116,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Map<String, dynamic>>> getDailyWaterForDateRange(DateTime start, DateTime end) async {
     final query = '''
-      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(amount_ml) AS total 
+      SELECT strftime('%Y-%m-%d', timestamp/1000, 'unixepoch', 'localtime') AS date, SUM(amount_ml) AS total 
       FROM water_logs 
       WHERE timestamp >= ? AND timestamp < ? 
       GROUP BY date

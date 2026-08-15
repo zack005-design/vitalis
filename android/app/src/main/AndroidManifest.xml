@@ -14,10 +14,20 @@
     <uses-permission android:name="android.permission.health.WRITE_TOTAL_CALORIES_BURNED"/>
     <uses-permission android:name="android.permission.health.READ_WEIGHT"/>
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT"/>
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY"/>
 
     <!-- Notification Alarms for Offline Water & Sleep Wind-Down -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- Required for network access (Google Fonts, Open Food Facts API) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Required for flutter_local_notifications to reschedule after reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Required for exact alarms on Android 12+ -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Required for notification sound/vibration -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
         android:label="Tracker"

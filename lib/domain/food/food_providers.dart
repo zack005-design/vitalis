@@ -85,10 +85,22 @@ final totalWaterMlTodayProvider = Provider<int>((ref) {
 // Food Search Query State Provider
 final foodSearchQueryProvider = StateProvider<String>((ref) => '');
 
-// Food Search Results Provider
+// Food Search Results Provider — 300ms debounce prevents a query per keystroke
 final foodSearchResultsProvider = FutureProvider<List<FoodSearchResult>>((ref) async {
   final query = ref.watch(foodSearchQueryProvider);
-  final repo = ref.watch(foodSearchRepositoryProvider);
+  if (query.trim().isEmpty) return const [];
+
+  // Debounce: wait 300ms after the last keystroke before firing the search
+  final completer = Completer<void>();
+  final timer = Timer(const Duration(milliseconds: 300), completer.complete);
+  ref.onDispose(() {
+    timer.cancel();
+    if (!completer.isCompleted) completer.complete();
+  });
+  await completer.future;
+
+  // Re-check if the provider was disposed/rebuilt during the debounce window
+  final repo = ref.read(foodSearchRepositoryProvider);
   return repo.search(query);
 });
 
@@ -155,38 +167,62 @@ class DailyMacros {
 }
 
 // Macro history for insights charts — last N days, per day totals
+// Uses a single batched DB query instead of N individual queries for performance.
 final macroHistoryProvider = FutureProvider.family<List<DailyMacros>, int>((ref, days) async {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
+  final startDay = DateTime(now.year, now.month, now.day - (days - 1));
+  final endDay = DateTime(now.year, now.month, now.day + 1);
+
+  // Single query for the full range
+  final allMeals = await db.getMealsForDateRange(startDay, endDay);
+
+  // Group by date string (YYYY-MM-DD) in Dart
+  final Map<String, DailyMacros> byDate = {};
+  for (final m in allMeals) {
+    final dateKey = m.timestamp.toIso8601String().substring(0, 10);
+    final existing = byDate[dateKey] ?? const DailyMacros();
+    byDate[dateKey] = DailyMacros(
+      protein: existing.protein + (m.proteinG ?? 0),
+      carbs: existing.carbs + (m.carbsG ?? 0),
+      fat: existing.fat + (m.fatG ?? 0),
+    );
+  }
+
+  // Build ordered result array — one entry per day, oldest to newest
   final List<DailyMacros> result = [];
   for (int i = days - 1; i >= 0; i--) {
     final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dayEnd = dayStart.add(const Duration(days: 1));
-    final mealList = await db.getMealsForDateRange(dayStart, dayEnd);
-    double protein = 0;
-    double carbs = 0;
-    double fat = 0;
-    for (final m in mealList) {
-      protein += m.proteinG ?? 0;
-      carbs += m.carbsG ?? 0;
-      fat += m.fatG ?? 0;
-    }
-    result.add(DailyMacros(protein: protein, carbs: carbs, fat: fat));
+    final dateKey = dayStart.toIso8601String().substring(0, 10);
+    result.add(byDate[dateKey] ?? const DailyMacros());
   }
   return result;
 });
 
-// Sleep history for insights charts — last N days, per day total in hours
+// Sleep history for insights charts — last N days, per day total in hours.
+// Uses a single batched DB query instead of N individual queries for performance.
 final sleepHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
+  final startDay = DateTime(now.year, now.month, now.day - (days - 1));
+  final endDay = DateTime(now.year, now.month, now.day + 1);
+
+  // Single query for the full range
+  final allSleep = await db.getSleepNotesForDateRange(startDay, endDay);
+
+  // Group by date string in Dart
+  final Map<String, int> minutesByDate = {};
+  for (final s in allSleep) {
+    final dateKey = s.date.toIso8601String().substring(0, 10);
+    minutesByDate[dateKey] = (minutesByDate[dateKey] ?? 0) + s.durationMinutes;
+  }
+
+  // Build ordered result array — one entry per day
   final List<double> result = [];
   for (int i = days - 1; i >= 0; i--) {
     final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dayEnd = dayStart.add(const Duration(days: 1));
-    final sleepList = await db.getSleepNotesForDateRange(dayStart, dayEnd);
-    final totalMin = sleepList.fold<int>(0, (s, n) => s + n.durationMinutes);
-    result.add(totalMin / 60.0);
+    final dateKey = dayStart.toIso8601String().substring(0, 10);
+    result.add((minutesByDate[dateKey] ?? 0) / 60.0);
   }
   return result;
 });

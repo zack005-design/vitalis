@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -11,6 +12,12 @@ class NotificationService {
 
   Future<void> initialize() async {
     tz.initializeTimeZones();
+    try {
+      final String timezoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timezoneName));
+    } catch (_) {
+      // Fallback if platform channel is not available (e.g. unit tests)
+    }
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
     await _notificationsPlugin.initialize(settings: initSettings);
@@ -20,25 +27,48 @@ class NotificationService {
         ?.requestNotificationsPermission();
   }
 
-  /// Schedule a recurring hourly water reminder notification
+  /// Schedule a recurring hourly water reminder notification (7AM–10PM only)
   Future<void> scheduleHourlyWaterReminders() async {
-    const androidDetails = AndroidNotificationDetails(
-      'water_reminders_channel',
-      'Water Reminders',
-      channelDescription: 'Hourly reminders to log water intake',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-    const details = NotificationDetails(android: androidDetails);
+    // Cancel any existing water reminders before rescheduling
+    await _notificationsPlugin.cancel(id: 0);
 
-    await _notificationsPlugin.periodicallyShow(
-      id: 0,
-      title: '💧 Hydration Reminder',
-      body: 'Time to drink 250ml of water to hit your daily goal!',
-      repeatInterval: RepeatInterval.hourly,
-      notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
+    final now = tz.TZDateTime.now(tz.local);
+    final hour = now.hour;
+
+    // Only schedule if within quiet hours window (7AM to 10PM)
+    if (hour >= 7 && hour < 22) {
+      const androidDetails = AndroidNotificationDetails(
+        'water_reminders_channel',
+        'Water Reminders',
+        channelDescription: 'Hourly reminders to log water intake (7AM–10PM only)',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+      const details = NotificationDetails(android: androidDetails);
+
+      await _notificationsPlugin.periodicallyShow(
+        id: 0,
+        title: '💧 Hydration Reminder',
+        body: 'Time to drink 250ml of water to hit your daily goal!',
+        repeatInterval: RepeatInterval.hourly,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+      // Also schedule the evening sleep wind-down (9:30 PM by default)
+      await scheduleSleepWindDownPrompt();
+    }
+  }
+
+  /// Reschedule water reminders — call at app startup and at 7AM each day
+  Future<void> rescheduleWaterRemindersIfNeeded() async {
+    final now = tz.TZDateTime.now(tz.local);
+    final hour = now.hour;
+    // Cancel outside quiet hours, start inside
+    if (hour >= 7 && hour < 22) {
+      await scheduleHourlyWaterReminders();
+    } else {
+      await _notificationsPlugin.cancel(id: 0);
+    }
   }
 
   /// Cancel all scheduled reminders

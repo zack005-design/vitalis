@@ -9,11 +9,16 @@ class TierCNpuNarrator {
     this.forceNpuSimulation = false,
   }) : _ruleEngine = ruleEngine ?? TierARuleEngine();
 
-  /// Capability detection check for on-device MediaTek APU / Android NNAPI / On-Device AI
+  /// Capability detection check for on-device MediaTek APU / Android NNAPI / On-Device AI.
+  /// Returns false by default — upgraded to true only when a real TFLite/Gemini Nano
+  /// delegate is wired in. Currently routes all calls through the Tier A rule engine
+  /// as the reliable deterministic fallback.
   Future<bool> isNpuAccelerationAvailable() async {
-    // Returns true when on-device NPU delegate / hardware acceleration is detected
     if (forceNpuSimulation) return true;
-    return true; // Xiaomi 17T / MediaTek Dimensity has dedicated hardware APU/NPU
+    // TODO(ai-tier): Return true only when flutter_tflite or google_generative_ai
+    // package is integrated and a real on-device model is loaded. Until then, use
+    // Tier A deterministic rules as the primary path.
+    return false;
   }
 
   /// Generates natural language narration powered by on-device NPU
@@ -47,7 +52,7 @@ class TierCNpuNarrator {
       } else if (waterPercent < 60) {
         description = "Hydration Lag: Current intake is at $waterPercent% of your daily goal.";
         recommendation = "Drink 300ml of water in the next hour to sustain metabolic focus.";
-        category = "hydration";
+        category = "water";
       } else {
         description = "Nutrition Focus: Total intake is $caloriesLogged kcal (${calDiff >= 0 ? '+$calDiff' : '$calDiff'} kcal from target).";
         recommendation = "Keep dinner balanced with lean protein and fiber.";

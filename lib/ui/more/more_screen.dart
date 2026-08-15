@@ -1,3 +1,5 @@
+import 'dart:io' as dart_io;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/export/json_backup_service.dart';
@@ -60,6 +62,39 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
   Future<void> _importData() async {
+    // Let the user pick a JSON backup file
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        allowMultiple: false,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open file picker: $e')),
+        );
+      }
+      return;
+    }
+
+    if (result == null || result.files.isEmpty) {
+      // User cancelled the picker — do nothing
+      return;
+    }
+
+    final filePath = result.files.single.path;
+    if (filePath == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not read the selected file path.')),
+        );
+      }
+      return;
+    }
+
+    // Show loading dialog
     if (mounted) {
       showDialog(
         context: context,
@@ -67,26 +102,41 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     try {
-      final dummyJson = '{"meals": [], "custom_foods": [], "sleep_notes": [], "water_logs": []}';
+      final file = dart_io.File(filePath);
+      final jsonString = await file.readAsString();
       final db = ref.read(appDatabaseProvider);
       final backupService = JsonBackupService(db: db);
-      // Simulate delay for effect
-      await Future.delayed(const Duration(milliseconds: 600));
-      final importedCount = await backupService.importFromJson(dummyJson);
-      
+      final importedCount = await backupService.importFromJson(jsonString);
+
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully imported $importedCount records from backup.')),
+          SnackBar(
+            content: Text('Successfully restored $importedCount records from backup.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on FormatException catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid backup file format: ${e.message}'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+        Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import failed: $e')),
+          SnackBar(
+            content: Text('Restore failed: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }

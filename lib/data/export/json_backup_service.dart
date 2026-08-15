@@ -123,12 +123,12 @@ class JsonBackupService {
           }
           final name = (m['name'] as String?) ?? 'Meal';
           final calories = (m['calories'] as num?)?.toInt() ?? 0;
-          final proteinG = (m['proteinG'] ?? m['protein_g'] as num?)?.toDouble();
-          final carbsG = (m['carbsG'] ?? m['carbs_g'] as num?)?.toDouble();
-          final fatG = (m['fatG'] ?? m['fat_g'] as num?)?.toDouble();
+          final proteinG = ((m['proteinG'] ?? m['protein_g']) as num?)?.toDouble();
+          final carbsG = ((m['carbsG'] ?? m['carbs_g']) as num?)?.toDouble();
+          final fatG = ((m['fatG'] ?? m['fat_g']) as num?)?.toDouble();
           final source = (m['source'] as String?) ?? 'manual';
           final healthConnectSynced =
-              (m['healthConnectSynced'] ?? m['health_connect_synced'] as bool?) ?? false;
+              ((m['healthConnectSynced'] ?? m['health_connect_synced']) as bool?) ?? false;
           final notes = m['notes'] as String?;
 
           mealCompanions.add(
@@ -158,12 +158,12 @@ class JsonBackupService {
           final id = cf['id'] as int?;
           final name = (cf['name'] as String?) ?? 'Custom Food';
           final caloriesPerServing =
-              (cf['caloriesPerServing'] ?? cf['calories_per_serving'] as num?)?.toInt() ?? 0;
+              ((cf['caloriesPerServing'] ?? cf['calories_per_serving']) as num?)?.toInt() ?? 0;
           final servingDescription =
-              (cf['servingDescription'] ?? cf['serving_description'] as String?) ?? '1 serving';
-          final proteinG = (cf['proteinG'] ?? cf['protein_g'] as num?)?.toDouble();
-          final carbsG = (cf['carbsG'] ?? cf['carbs_g'] as num?)?.toDouble();
-          final fatG = (cf['fatG'] ?? cf['fat_g'] as num?)?.toDouble();
+              ((cf['servingDescription'] ?? cf['serving_description']) as String?) ?? '1 serving';
+          final proteinG = ((cf['proteinG'] ?? cf['protein_g']) as num?)?.toDouble();
+          final carbsG = ((cf['carbsG'] ?? cf['carbs_g']) as num?)?.toDouble();
+          final fatG = ((cf['fatG'] ?? cf['fat_g']) as num?)?.toDouble();
           final createdAtStr = (cf['createdAt'] ?? cf['created_at']) as String?;
           final DateTime createdAt;
           if (createdAtStr != null) {
@@ -212,9 +212,9 @@ class JsonBackupService {
           final wakeTimeStr = (s['wakeTime'] ?? s['wake_time']) as String?;
           final wakeTime = wakeTimeStr != null ? DateTime.tryParse(wakeTimeStr) : null;
           final durationMinutes =
-              (s['durationMinutes'] ?? s['duration_minutes'] as num?)?.toInt() ?? 0;
-          final ratingStars = (s['ratingStars'] ?? s['rating_stars'] as num?)?.toInt() ?? 4;
-          final noteText = (s['noteText'] ?? s['note_text'] as String?) ?? '';
+              ((s['durationMinutes'] ?? s['duration_minutes']) as num?)?.toInt() ?? 0;
+          final ratingStars = ((s['ratingStars'] ?? s['rating_stars']) as num?)?.toInt() ?? 4;
+          final noteText = ((s['noteText'] ?? s['note_text']) as String?) ?? '';
           final createdAtStr = (s['createdAt'] ?? s['created_at']) as String?;
           final createdAt = createdAtStr != null
               ? (DateTime.tryParse(createdAtStr) ?? date)
@@ -251,7 +251,7 @@ class JsonBackupService {
           if (timestamp == null) {
             throw FormatException('Invalid timestamp format in water log record: "$timestampStr"');
           }
-          final amountMl = (w['amountMl'] ?? w['amount_ml'] as num?)?.toInt() ?? 0;
+          final amountMl = ((w['amountMl'] ?? w['amount_ml']) as num?)?.toInt() ?? 0;
 
           waterLogCompanions.add(
             WaterLogsCompanion(
