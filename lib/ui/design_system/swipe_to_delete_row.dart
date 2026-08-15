@@ -8,6 +8,7 @@ class SwipeToDeleteRow extends StatelessWidget {
   final Key itemKey;
   final String title;
   final VoidCallback onDelete;
+  final VoidCallback? onUndo;
   final String undoLabel;
 
   const SwipeToDeleteRow({
@@ -16,6 +17,7 @@ class SwipeToDeleteRow extends StatelessWidget {
     required this.itemKey,
     required this.title,
     required this.onDelete,
+    this.onUndo,
     this.undoLabel = "Undo",
   });
 
@@ -33,13 +35,13 @@ class SwipeToDeleteRow extends StatelessWidget {
             content: Text('Deleted "$title"'),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: undoLabel,
-              textColor: AppColors.calorieAccent,
-              onPressed: () {
-                // Undo logic can be handled by re-adding or state provider
-              },
-            ),
+            action: onUndo != null
+                ? SnackBarAction(
+                    label: undoLabel,
+                    textColor: AppColors.calorieAccent,
+                    onPressed: onUndo!,
+                  )
+                : null,
           ),
         );
       },

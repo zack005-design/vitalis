@@ -40,10 +40,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       final height = prefs.getDouble('profile_height')?.toStringAsFixed(0) ?? "175";
       final weight = prefs.getDouble('profile_weight')?.toStringAsFixed(0) ?? "72";
       final act = prefs.getString('profile_activity') ?? "Moderate";
+      final sex = prefs.getString('profile_sex') ?? prefs.getString('profile_gender') ?? "Male";
       setState(() {
         _profileName = name;
         _activityLevel = act;
-        _profileDetails = "$age yrs • $height cm • $weight kg • $act";
+        _profileDetails = "$sex • $age yrs • $height cm • $weight kg • $act";
         _useAiNarration = prefs.getBool('pref_ai_narration') ?? true;
         _enableReminders = prefs.getBool('pref_reminders') ?? true;
       });

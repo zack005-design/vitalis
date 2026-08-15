@@ -80,14 +80,16 @@ class BottomSheetModal extends StatelessWidget {
 
                 // Header title + actions
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      title,
-                      style: AppTypography.title2(isDark).copyWith(
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: AppTypography.title2(isDark).copyWith(
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        ),
                       ),
                     ),
+                    if (actions != null) ...actions!,
                     IconButton(
                       icon: Icon(
                         Icons.close_rounded,

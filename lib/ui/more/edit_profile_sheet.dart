@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/food/food_providers.dart';
+import '../../domain/profile/bmr_calculator.dart';
 import '../design_system/app_button.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_text_field.dart';
 import '../design_system/app_typography.dart';
 import '../design_system/bottom_sheet_modal.dart';
 import '../design_system/glass_container.dart';
+import '../design_system/segmented_control.dart';
 
 class EditProfileSheet extends ConsumerStatefulWidget {
   const EditProfileSheet({super.key});
@@ -30,6 +32,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   final _heightController = TextEditingController(text: "175");
   final _weightController = TextEditingController(text: "72");
 
+  String _sex = "Male";
   String _activityLevel = "Moderate";
   bool _isSaving = false;
 
@@ -47,6 +50,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
         _ageController.text = (prefs.getInt('profile_age') ?? 28).toString();
         _heightController.text = (prefs.getDouble('profile_height') ?? 175.0).toStringAsFixed(0);
         _weightController.text = (prefs.getDouble('profile_weight') ?? 72.0).toStringAsFixed(0);
+        _sex = prefs.getString('profile_sex') ?? prefs.getString('profile_gender') ?? "Male";
         _activityLevel = prefs.getString('profile_activity') ?? "Moderate";
       });
     }
@@ -66,25 +70,13 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
     final height = double.tryParse(_heightController.text) ?? 175;
     final weight = double.tryParse(_weightController.text) ?? 72;
 
-    // Mifflin-St Jeor Formula
-    final bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
-
-    double multiplier = 1.2;
-    switch (_activityLevel) {
-      case "Light":
-        multiplier = 1.375;
-        break;
-      case "Moderate":
-        multiplier = 1.55;
-        break;
-      case "Active":
-        multiplier = 1.725;
-        break;
-      case "Very Active":
-        multiplier = 1.9;
-        break;
-    }
-    return (bmr * multiplier).round();
+    return BmrTdeeCalculator.calculateTdee(
+      weightKg: weight,
+      heightCm: height,
+      ageYears: age,
+      gender: BmrTdeeCalculator.parseGender(_sex),
+      activityLevel: BmrTdeeCalculator.parseActivityLevel(_activityLevel),
+    );
   }
 
   Future<void> _save() async {
@@ -95,6 +87,8 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
     await prefs.setInt('profile_age', int.tryParse(_ageController.text) ?? 28);
     await prefs.setDouble('profile_height', double.tryParse(_heightController.text) ?? 175);
     await prefs.setDouble('profile_weight', double.tryParse(_weightController.text) ?? 72);
+    await prefs.setString('profile_sex', _sex);
+    await prefs.setString('profile_gender', _sex);
     await prefs.setString('profile_activity', _activityLevel);
     await ref.read(calorieTargetProvider.notifier).setTarget(tdee);
 
@@ -172,12 +166,31 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
           GlassContainer(
             padding: const EdgeInsets.all(18),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppTextField(
                   label: "Name",
                   placeholder: "Full Name",
                   controller: _nameController,
                   prefixIcon: Icons.person_outline_rounded,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Biological Sex",
+                  style: AppTypography.labelSm(isDark).copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SegmentedControl<String>(
+                  selectedValue: _sex,
+                  options: const {
+                    "Male": "Male",
+                    "Female": "Female",
+                  },
+                  onValueChanged: (val) {
+                    setState(() => _sex = val);
+                  },
                 ),
                 const SizedBox(height: 12),
                 Row(
