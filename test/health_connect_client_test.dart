@@ -81,6 +81,16 @@ class FakeHealth extends Health {
   }
 }
 
+class FakeHealthError extends Health {
+  @override
+  Future<void> configure() async {}
+
+  @override
+  Future<void> installHealthConnect() async {
+    throw Exception('Simulated install error');
+  }
+}
+
 void main() {
   group('HealthConnectClient - Macronutrients', () {
     test('writeMealNutrition passes protein, carbs, and fat to health.writeMeal', () async {
@@ -127,6 +137,16 @@ void main() {
       expect(fakeHealth.capturedFatTotal, isNull);
       expect(fakeHealth.capturedMealType, equals(MealType.UNKNOWN));
       expect(fakeHealth.capturedName, isNull);
+    });
+
+    test('installHealthConnect exposes errors instead of swallowing', () async {
+      final fakeErrorHealth = FakeHealthError();
+      final client = HealthConnectClient(health: fakeErrorHealth);
+
+      expect(
+        () => client.installHealthConnect(),
+        throwsA(isA<Exception>()),
+      );
     });
   });
 }

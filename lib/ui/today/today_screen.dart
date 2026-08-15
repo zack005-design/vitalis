@@ -19,29 +19,53 @@ import 'water_history_sheet.dart';
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
-  Future<void> _quickAddWater(WidgetRef ref, int amountMl) async {
+  Future<void> _quickAddWater(BuildContext context, WidgetRef ref, int amountMl) async {
     HapticFeedback.lightImpact();
     final now = DateTime.now();
     final db = ref.read(appDatabaseProvider);
-    await db.insertWaterLog(
-      WaterLogsCompanion(
-        amountMl: drift.Value(amountMl),
-        timestamp: drift.Value(now),
-      ),
-    );
-    // Background sync to Health Connect
-    HealthConnectClient().writeWaterLog(amountMl, now).ignore();
+    try {
+      await db.insertWaterLog(
+        WaterLogsCompanion(
+          amountMl: drift.Value(amountMl),
+          timestamp: drift.Value(now),
+        ),
+      );
+      // Background sync to Health Connect
+      HealthConnectClient().writeWaterLog(amountMl, now).ignore();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add water: $e')),
+        );
+      }
+    }
   }
 
-  Future<void> _deleteMeal(WidgetRef ref, Meal meal) async {
+  Future<void> _deleteMeal(BuildContext context, WidgetRef ref, Meal meal) async {
     HapticFeedback.mediumImpact();
     final db = ref.read(appDatabaseProvider);
-    await db.deleteMeal(meal.id);
+    try {
+      await db.deleteMeal(meal.id);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete meal: $e')),
+        );
+      }
+    }
   }
 
-  Future<void> _restoreMeal(WidgetRef ref, Meal meal) async {
+  Future<void> _restoreMeal(BuildContext context, WidgetRef ref, Meal meal) async {
     final db = ref.read(appDatabaseProvider);
-    await db.restoreMeal(meal);
+    try {
+      await db.restoreMeal(meal);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to restore meal: $e')),
+        );
+      }
+    }
   }
 
   String _formatDuration(int minutes) {
@@ -297,11 +321,11 @@ class TodayScreen extends ConsumerWidget {
                       Row(
                         children: [
                           Expanded(
-                            child: _quickWaterPill(ref, "+250", 250, isDark),
+                            child: _quickWaterPill(context, ref, "+250", 250, isDark),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _quickWaterPill(ref, "+500", 500, isDark),
+                            child: _quickWaterPill(context, ref, "+500", 500, isDark),
                           ),
                         ],
                       ),
@@ -485,8 +509,8 @@ class TodayScreen extends ConsumerWidget {
                   return SwipeToDeleteRow(
                     itemKey: ValueKey(meal.id),
                     title: meal.name,
-                    onDelete: () => _deleteMeal(ref, meal),
-                    onUndo: () => _restoreMeal(ref, meal),
+                    onDelete: () => _deleteMeal(context, ref, meal),
+                    onUndo: () => _restoreMeal(context, ref, meal),
                     child: GlassContainer(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       child: Row(
@@ -583,9 +607,9 @@ class TodayScreen extends ConsumerWidget {
     );
   }
 
-  Widget _quickWaterPill(WidgetRef ref, String label, int amountMl, bool isDark) {
+  Widget _quickWaterPill(BuildContext context, WidgetRef ref, String label, int amountMl, bool isDark) {
     return GestureDetector(
-      onTap: () => _quickAddWater(ref, amountMl),
+      onTap: () => _quickAddWater(context, ref, amountMl),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(

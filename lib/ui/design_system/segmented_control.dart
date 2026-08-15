@@ -2,6 +2,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app_colors.dart';
+import 'app_typography.dart';
 
 /// Translucent Stitch-style segmented pill control.
 class SegmentedControl<T> extends StatelessWidget {

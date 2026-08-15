@@ -91,23 +91,35 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
     setState(() => _isSaving = true);
 
     final db = ref.read(appDatabaseProvider);
-    await db.insertCustomFood(
-      CustomFoodsCompanion(
-        name: drift.Value(name),
-        caloriesPerServing: drift.Value(calories),
-        servingDescription: drift.Value(_servingController.text.trim()),
-        proteinG: drift.Value(double.tryParse(_proteinController.text.trim())),
-        carbsG: drift.Value(double.tryParse(_carbsController.text.trim())),
-        fatG: drift.Value(double.tryParse(_fatController.text.trim())),
-        createdAt: drift.Value(DateTime.now()),
-      ),
-    );
-
-    if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added "$name" to Custom Dish Library!')),
+    try {
+      await db.insertCustomFood(
+        CustomFoodsCompanion(
+          name: drift.Value(name),
+          caloriesPerServing: drift.Value(calories),
+          servingDescription: drift.Value(_servingController.text.trim()),
+          proteinG: drift.Value(double.tryParse(_proteinController.text.trim())),
+          carbsG: drift.Value(double.tryParse(_carbsController.text.trim())),
+          fatG: drift.Value(double.tryParse(_fatController.text.trim())),
+          createdAt: drift.Value(DateTime.now()),
+        ),
       );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Added "$name" to Custom Dish Library!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save food: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 

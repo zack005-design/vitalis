@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:health/health.dart';
+import 'package:flutter/foundation.dart';
 import '../local/app_database.dart';
 
 class HealthConnectClient {
@@ -38,8 +39,9 @@ class HealthConnectClient {
 
       final granted = await _health.requestAuthorization(_dataTypes, permissions: _permissions);
       return granted;
-    } catch (_) {
-      return false;
+    } catch (e, st) {
+      debugPrint('HealthConnect error (requestPermissions): $e\n$st');
+      rethrow;
     }
   }
 
@@ -47,7 +49,10 @@ class HealthConnectClient {
   Future<void> installHealthConnect() async {
     try {
       await _health.installHealthConnect();
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('HealthConnect error (installHealthConnect): $e\n$st');
+      rethrow;
+    }
   }
 
   /// Fetch last night's sleep sessions
@@ -61,8 +66,9 @@ class HealthConnectClient {
         types: [HealthDataType.SLEEP_SESSION],
       );
       return points;
-    } catch (_) {
-      return [];
+    } catch (e, st) {
+      debugPrint('HealthConnect error (fetchSleepSessions): $e\n$st');
+      rethrow;
     }
   }
 
@@ -83,8 +89,9 @@ class HealthConnectClient {
         }
       }
       return (totalLiters * 1000).round();
-    } catch (_) {
-      return 0;
+    } catch (e, st) {
+      debugPrint('HealthConnect error (fetchTodayWaterMl): $e\n$st');
+      rethrow;
     }
   }
 
@@ -99,8 +106,9 @@ class HealthConnectClient {
         endTime: timestamp,
         unit: HealthDataUnit.LITER,
       );
-    } catch (_) {
-      return false;
+    } catch (e, st) {
+      debugPrint('HealthConnect error (writeWaterLog): $e\n$st');
+      rethrow;
     }
   }
 
@@ -116,8 +124,9 @@ class HealthConnectClient {
         endTime: end,
         unit: HealthDataUnit.HOUR,
       );
-    } catch (_) {
-      return false;
+    } catch (e, st) {
+      debugPrint('HealthConnect error (writeSleepSession): $e\n$st');
+      rethrow;
     }
   }
 
@@ -143,8 +152,9 @@ class HealthConnectClient {
         fatTotal: fatG,
         name: name,
       );
-    } catch (_) {
-      return false;
+    } catch (e, st) {
+      debugPrint('HealthConnect error (writeMealNutrition): $e\n$st');
+      rethrow;
     }
   }
 
@@ -177,6 +187,9 @@ class HealthConnectClient {
           }
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('HealthConnect error (syncFromHealthConnect): $e\n$st');
+      rethrow;
+    }
   }
 }

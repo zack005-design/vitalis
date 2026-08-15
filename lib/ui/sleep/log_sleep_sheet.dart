@@ -125,7 +125,7 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
       );
 
       // Background sync to Health Connect
-      HealthConnectClient().writeSleepSession(start: bed, end: wake);
+      HealthConnectClient().writeSleepSession(start: bed, end: wake).ignore();
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -134,6 +134,12 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
             content: Text('Sleep logged: $_durationLabel'),
             behavior: SnackBarBehavior.floating,
           ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to log sleep: $e')),
         );
       }
     } finally {

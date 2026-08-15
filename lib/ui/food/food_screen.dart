@@ -216,10 +216,18 @@ class FoodScreen extends ConsumerWidget {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.delete_outline_rounded, color: AppColors.destructive, size: 20),
-                          onPressed: () {
+                          onPressed: () async {
                             HapticFeedback.mediumImpact();
                             final db = ref.read(appDatabaseProvider);
-                            db.deleteMeal(meal.id);
+                            try {
+                              await db.deleteMeal(meal.id);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to delete meal: $e')),
+                                );
+                              }
+                            }
                           },
                         ),
                       ],

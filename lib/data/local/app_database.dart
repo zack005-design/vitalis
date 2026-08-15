@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'tables/meals_table.dart';
 import 'tables/custom_foods_table.dart';
@@ -25,13 +26,29 @@ class AppDatabase extends _$AppDatabase {
       onCreate: (m) => m.createAll(),
       onUpgrade: (m, from, to) async {
         if (from < 3) {
-          await m.addColumn(waterLogs, waterLogs.amountMl);
+          try {
+            await m.addColumn(waterLogs, waterLogs.amountMl);
+          } catch (e) {
+            debugPrint('Migration error (waterLogs.amountMl): $e');
+          }
         }
         if (from < 4) {
           // Add new columns to sleep_notes
-          await m.addColumn(sleepNotes, sleepNotes.bedtime);
-          await m.addColumn(sleepNotes, sleepNotes.wakeTime);
-          await m.addColumn(sleepNotes, sleepNotes.durationMinutes);
+          try {
+            await m.addColumn(sleepNotes, sleepNotes.bedtime);
+          } catch (e) {
+            debugPrint('Migration error (sleepNotes.bedtime): $e');
+          }
+          try {
+            await m.addColumn(sleepNotes, sleepNotes.wakeTime);
+          } catch (e) {
+            debugPrint('Migration error (sleepNotes.wakeTime): $e');
+          }
+          try {
+            await m.addColumn(sleepNotes, sleepNotes.durationMinutes);
+          } catch (e) {
+            debugPrint('Migration error (sleepNotes.durationMinutes): $e');
+          }
           // Make noteText optional migration — recreate table safely
         }
       },
@@ -156,6 +173,6 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'vitality_tracker.sqlite'));
-    return NativeDatabase(file);
+    return NativeDatabase.createInBackground(file);
   });
 }
