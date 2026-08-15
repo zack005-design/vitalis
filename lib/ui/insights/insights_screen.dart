@@ -121,9 +121,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     const SizedBox(height: 24),
 
                     // Capsule Bar Chart
-                    SizedBox(
-                      height: 160,
-                      child: BarChart(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        height: 160,
+                        width: _days > 7 ? _days * 30.0 : MediaQuery.of(context).size.width - 80,
+                        child: BarChart(
                         BarChartData(
                           maxY: maxVal,
                           borderData: FlBorderData(show: false),
@@ -183,6 +186,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           }).toList(),
                         ),
                       ),
+                    ),
                     ),
                   ],
                 ),
@@ -244,9 +248,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    SizedBox(
-                      height: 150,
-                      child: LineChart(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        height: 150,
+                        width: _days > 7 ? _days * 30.0 : MediaQuery.of(context).size.width - 80,
+                        child: LineChart(
                         LineChartData(
                           maxY: maxVal == 0 ? 100 : maxVal,
                           borderData: FlBorderData(show: false),
@@ -293,6 +300,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           ],
                         ),
                       ),
+                    ),
                     ),
                   ],
                 ),
@@ -369,9 +377,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    SizedBox(
-                      height: 150,
-                      child: LineChart(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        height: 150,
+                        width: _days > 7 ? _days * 30.0 : MediaQuery.of(context).size.width - 80,
+                        child: LineChart(
                         LineChartData(
                           maxY: maxVal,
                           borderData: FlBorderData(show: false),
@@ -443,6 +454,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           ],
                         ),
                       ),
+                    ),
                     ),
                   ],
                 ),
@@ -518,9 +530,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    SizedBox(
-                      height: 160,
-                      child: BarChart(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        height: 160,
+                        width: _days > 7 ? _days * 30.0 : MediaQuery.of(context).size.width - 80,
+                        child: BarChart(
                         BarChartData(
                           maxY: maxVal,
                           borderData: FlBorderData(show: false),
@@ -580,6 +595,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                           }).toList(),
                         ),
                       ),
+                    ),
                     ),
                   ],
                 ),
