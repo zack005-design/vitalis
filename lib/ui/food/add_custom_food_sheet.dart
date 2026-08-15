@@ -189,37 +189,77 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                 ),
                 const SizedBox(height: 14),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Protein Box
                     Expanded(
-                      child: _buildMacroInputBox(
-                        label: "Protein",
-                        icon: Icons.fitness_center_rounded,
-                        iconColor: AppColors.waterAccent,
-                        controller: _proteinController,
-                        isDark: isDark,
+                      child: Column(
+                        children: [
+                          _buildMacroInputBox(
+                            label: "Protein",
+                            icon: Icons.fitness_center_rounded,
+                            iconColor: AppColors.waterAccent,
+                            controller: _proteinController,
+                            isDark: isDark,
+                          ),
+                          if (_proteinError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                _proteinError!,
+                                style: const TextStyle(color: Colors.red, fontSize: 11),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),
                     // Carbs Box
                     Expanded(
-                      child: _buildMacroInputBox(
-                        label: "Carbs",
-                        icon: Icons.grain_rounded,
-                        iconColor: const Color(0xFFC64F00),
-                        controller: _carbsController,
-                        isDark: isDark,
+                      child: Column(
+                        children: [
+                          _buildMacroInputBox(
+                            label: "Carbs",
+                            icon: Icons.grain_rounded,
+                            iconColor: const Color(0xFFC64F00),
+                            controller: _carbsController,
+                            isDark: isDark,
+                          ),
+                          if (_carbsError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                _carbsError!,
+                                style: const TextStyle(color: Colors.red, fontSize: 11),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),
                     // Fat Box
                     Expanded(
-                      child: _buildMacroInputBox(
-                        label: "Fat",
-                        icon: Icons.water_drop_rounded,
-                        iconColor: AppColors.calorieAccent,
-                        controller: _fatController,
-                        isDark: isDark,
+                      child: Column(
+                        children: [
+                          _buildMacroInputBox(
+                            label: "Fat",
+                            icon: Icons.water_drop_rounded,
+                            iconColor: AppColors.calorieAccent,
+                            controller: _fatController,
+                            isDark: isDark,
+                          ),
+                          if (_fatError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                _fatError!,
+                                style: const TextStyle(color: Colors.red, fontSize: 11),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],

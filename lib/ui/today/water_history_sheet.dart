@@ -45,6 +45,7 @@ class WaterHistorySheet extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final waterLogsAsync = ref.watch(todayWaterLogsProvider);
     final totalWaterMl = ref.watch(totalWaterMlTodayProvider);
+    final targetWaterMl = ref.watch(waterTargetProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -62,7 +63,7 @@ class WaterHistorySheet extends ConsumerWidget {
                   Text("Today's Hydration", style: AppTypography.subhead(isDark)),
                   const SizedBox(height: 4),
                   Text(
-                    "${(totalWaterMl / 1000).toStringAsFixed(1)}L / 2.0L",
+                    "${(totalWaterMl / 1000).toStringAsFixed(1)}L / ${(targetWaterMl / 1000).toStringAsFixed(1)}L",
                     style: AppTypography.headlineMd(isDark).copyWith(
                       color: AppColors.waterAccent,
                       fontWeight: FontWeight.bold,
