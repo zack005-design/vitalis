@@ -9,6 +9,7 @@ import '../design_system/app_colors.dart';
 import '../design_system/app_scaffold.dart';
 import '../design_system/app_typography.dart';
 import '../design_system/glass_container.dart';
+import '../../domain/profile/profile_provider.dart';
 import 'edit_profile_sheet.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
@@ -19,36 +20,11 @@ class MoreScreen extends ConsumerStatefulWidget {
 }
 
 class _MoreScreenState extends ConsumerState<MoreScreen> {
-  String _profileName = "Alex Johnson";
-  String _profileDetails = "28 yrs • 175 cm • 72 kg • Moderate";
-  String _activityLevel = "Moderate";
-  bool _useAiNarration = true;
-  bool _enableReminders = true;
   bool _isExporting = false;
 
   @override
   void initState() {
     super.initState();
-    _loadPrefs();
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      final name = prefs.getString('profile_name') ?? "Alex Johnson";
-      final age = prefs.getInt('profile_age') ?? 28;
-      final height = prefs.getDouble('profile_height')?.toStringAsFixed(0) ?? "175";
-      final weight = prefs.getDouble('profile_weight')?.toStringAsFixed(0) ?? "72";
-      final act = prefs.getString('profile_activity') ?? "Moderate";
-      final sex = prefs.getString('profile_sex') ?? prefs.getString('profile_gender') ?? "Male";
-      setState(() {
-        _profileName = name;
-        _activityLevel = act;
-        _profileDetails = "$sex • $age yrs • $height cm • $weight kg • $act";
-        _useAiNarration = prefs.getBool('pref_ai_narration') ?? true;
-        _enableReminders = prefs.getBool('pref_reminders') ?? true;
-      });
-    }
   }
 
   Future<void> _saveAiNarration(bool value) async {
@@ -183,6 +159,13 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final calorieTarget = ref.watch(calorieTargetProvider);
     final waterTarget = ref.watch(waterTargetProvider);
+    final userProfile = ref.watch(userProfileProvider);
+    
+    final _profileName = userProfile.name;
+    final _activityLevel = userProfile.activityLevel;
+    final _profileDetails = "${userProfile.sex} • ${userProfile.age} yrs • ${userProfile.height.toStringAsFixed(0)} cm • ${userProfile.weight.toStringAsFixed(0)} kg • ${userProfile.activityLevel}";
+    final _useAiNarration = userProfile.useAiNarration;
+    final _enableReminders = userProfile.enableReminders;
 
     return AppScaffold(
       title: "Settings",
@@ -194,7 +177,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             padding: const EdgeInsets.all(18),
             onTap: () async {
               await EditProfileSheet.show(context);
-              _loadPrefs();
+              ref.read(userProfileProvider.notifier).reload();
             },
             child: Row(
               children: [
@@ -287,7 +270,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   subtitle: "Daily Target: $calorieTarget kcal • ${(waterTarget / 1000).toStringAsFixed(1)}L",
                   onTap: () async {
                     await EditProfileSheet.show(context);
-                    _loadPrefs();
+                    ref.read(userProfileProvider.notifier).reload();
                   },
                 ),
                 _buildDivider(isDark),
@@ -299,7 +282,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   subtitle: "$_activityLevel activity tier",
                   onTap: () async {
                     await EditProfileSheet.show(context);
-                    _loadPrefs();
+                    ref.read(userProfileProvider.notifier).reload();
                   },
                 ),
               ],
@@ -361,8 +344,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   subtitle: "Use Gemini Nano when available (Tier C)",
                   value: _useAiNarration,
                   onChanged: (val) {
-                    setState(() => _useAiNarration = val);
                     _saveAiNarration(val);
+                    ref.read(userProfileProvider.notifier).reload();
                   },
                 ),
                 _buildDivider(isDark),
@@ -374,8 +357,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   subtitle: "Water logging & evening sleep wind-down",
                   value: _enableReminders,
                   onChanged: (val) {
-                    setState(() => _enableReminders = val);
                     _saveReminders(val);
+                    ref.read(userProfileProvider.notifier).reload();
                   },
                 ),
               ],

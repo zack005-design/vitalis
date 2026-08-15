@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:calorie_sleep_tracker/domain/shared_preferences_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,9 +17,13 @@ void main() {
 
   group('EditProfileSheet Biological Sex & Female BMR UI Tests', () {
     testWidgets('Defaults to Male, toggles to Female, and recomputes TDEE target live', (tester) async {
+      final prefs = await SharedPreferences.getInstance();
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const MaterialApp(
             home: Scaffold(
               body: SingleChildScrollView(
                 child: EditProfileSheet(),
@@ -69,9 +74,13 @@ void main() {
         'profile_activity': 'Active',
       });
 
+      final prefs = await SharedPreferences.getInstance();
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const MaterialApp(
             home: Scaffold(
               body: SingleChildScrollView(
                 child: EditProfileSheet(),

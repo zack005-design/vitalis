@@ -32,13 +32,22 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _currentIndex != 0) {
+          setState(() {
+            _currentIndex = 0;
+          });
+        }
+      },
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
       bottomNavigationBar: Container(
         margin: EdgeInsets.fromLTRB(20, 0, 20, 10 + (bottomInset > 0 ? bottomInset : 10)),
         child: ClipRRect(
@@ -76,6 +85,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),

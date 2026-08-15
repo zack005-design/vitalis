@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'domain/shared_preferences_provider.dart';
 import 'services/notification_service.dart';
 import 'ui/design_system/app_colors.dart';
 import 'ui/main_navigation_shell.dart';
@@ -31,9 +33,14 @@ Future<void> main() async {
       debugPrint('SystemChrome configuration failed: $e\n$stackTrace');
     }
 
+    final prefs = await SharedPreferences.getInstance();
+
     runApp(
-      const ProviderScope(
-        child: CalorieSleepTrackerApp(),
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const CalorieSleepTrackerApp(),
       ),
     );
   }, (error, stackTrace) {

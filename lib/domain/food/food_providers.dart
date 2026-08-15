@@ -6,6 +6,7 @@ import '../../data/food/food_search_repository.dart';
 import '../insights/tier_a_rule_engine.dart';
 import '../insights/tier_b_balance_scorer.dart';
 import '../insights/tier_c_gemini_narrator.dart';
+import '../shared_preferences_provider.dart';
 
 // Database Singleton Provider
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -190,46 +191,36 @@ final sleepHistoryProvider = FutureProvider.family<List<double>, int>((ref, days
 
 // Dynamic User Calorie Target Provider (Mifflin-St Jeor / Profile-linked)
 class CalorieTargetNotifier extends StateNotifier<int> {
-  CalorieTargetNotifier() : super(2200) {
-    _load();
-  }
+  final SharedPreferences prefs;
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getInt('target_calories') ?? 2200;
-  }
+  CalorieTargetNotifier(this.prefs) : super(prefs.getInt('target_calories') ?? 2200);
 
   Future<void> setTarget(int target) async {
     state = target;
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('target_calories', target);
   }
 }
 
 final calorieTargetProvider = StateNotifierProvider<CalorieTargetNotifier, int>((ref) {
-  return CalorieTargetNotifier();
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return CalorieTargetNotifier(prefs);
 });
 
 // Dynamic User Water Target Provider (in ml)
 class WaterTargetNotifier extends StateNotifier<int> {
-  WaterTargetNotifier() : super(2000) {
-    _load();
-  }
+  final SharedPreferences prefs;
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getInt('target_water_ml') ?? 2000;
-  }
+  WaterTargetNotifier(this.prefs) : super(prefs.getInt('target_water_ml') ?? 2000);
 
   Future<void> setTarget(int target) async {
     state = target;
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('target_water_ml', target);
   }
 }
 
 final waterTargetProvider = StateNotifierProvider<WaterTargetNotifier, int>((ref) {
-  return WaterTargetNotifier();
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return WaterTargetNotifier(prefs);
 });
 
 // Tier B Daily Balance Score Provider

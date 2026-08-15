@@ -7,8 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:calorie_sleep_tracker/domain/shared_preferences_provider.dart';
 
 class MockWaterTargetNotifier extends StateNotifier<int> implements WaterTargetNotifier {
+  @override
+  late final SharedPreferences prefs;
+
   MockWaterTargetNotifier(super.state);
 
   @override
@@ -22,8 +26,11 @@ void main() {
 
   late AppDatabase db;
 
-  setUp(() {
+  late SharedPreferences prefs;
+
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
     db = AppDatabase.forTesting(NativeDatabase.memory());
   });
 
@@ -37,6 +44,7 @@ void main() {
         ProviderScope(
           overrides: [
             appDatabaseProvider.overrideWithValue(db),
+            sharedPreferencesProvider.overrideWithValue(prefs),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -143,6 +151,7 @@ void main() {
           overrides: [
             appDatabaseProvider.overrideWithValue(db),
             todayWaterLogsProvider.overrideWith((ref) => Stream.value([])),
+            sharedPreferencesProvider.overrideWithValue(prefs),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -165,6 +174,7 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             todayWaterLogsProvider.overrideWith((ref) => Stream.value([])),
             waterTargetProvider.overrideWith((ref) => MockWaterTargetNotifier(2500)),
+            sharedPreferencesProvider.overrideWithValue(prefs),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -194,6 +204,7 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             todayWaterLogsProvider.overrideWith((ref) => Stream.value([sampleLog])),
             waterTargetProvider.overrideWith((ref) => MockWaterTargetNotifier(3200)),
+            sharedPreferencesProvider.overrideWithValue(prefs),
           ],
           child: const MaterialApp(
             home: Scaffold(

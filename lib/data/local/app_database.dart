@@ -146,6 +146,8 @@ class AppDatabase extends _$AppDatabase {
   Future<List<CustomFood>> searchCustomFoods(String query) {
     final cleanQuery = '%${query.trim().toLowerCase()}%';
     return (select(customFoods)..where((tbl) => tbl.name.like(cleanQuery))).get();
+  }
+
   Future<void> restoreMeal(Meal meal) => into(meals).insert(meal, mode: InsertMode.insertOrReplace);
   Future<void> restoreWaterLog(WaterLog log) => into(waterLogs).insert(log, mode: InsertMode.insertOrReplace);
 }
