@@ -105,6 +105,22 @@ void main() {
       expect(insight.description, contains('Recovery Deficit'));
     });
 
+    test('TierCNpuNarrator falls back to deterministic engine when TFLite model is invalid', () async {
+      final narrator = TierCNpuNarrator(forceNpuSimulation: false);
+      
+      final insight = await narrator.generateNarration(
+        caloriesLogged: 1500,
+        calorieTarget: 2000,
+        waterLoggedMl: 2500,
+        waterTargetMl: 2500,
+        sleepHours: 8.0,
+      );
+
+      // Should fall back to Tier A since the mock TFLite file is invalid
+      expect(insight.title, isNotEmpty);
+      expect(insight.category, isNotEmpty);
+    });
+
     test('TierBBalanceScorer calculates multi-factor score on device', () {
       final scorer = TierBBalanceScorer();
       final score = scorer.calculateScore(

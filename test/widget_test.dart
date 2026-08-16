@@ -17,6 +17,8 @@ void main() {
         child: const CalorieSleepTrackerApp(),
       ),
     );
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 2));
     expect(find.text('Today'), findsWidgets);
   });
 }

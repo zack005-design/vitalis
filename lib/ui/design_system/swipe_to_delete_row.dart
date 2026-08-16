@@ -34,6 +34,7 @@ class SwipeToDeleteRow extends StatelessWidget {
           SnackBar(
             content: Text('Deleted "$title"'),
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
             duration: const Duration(seconds: 4),
             action: onUndo != null
                 ? SnackBarAction(

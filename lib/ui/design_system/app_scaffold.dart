@@ -6,7 +6,7 @@ import 'app_typography.dart';
 /// AppScaffold provides multi-layered diffuse ambient background glows, HyperOS safe area padding,
 /// 120Hz/144Hz high refresh rate scroll physics, and sleek large-title headers.
 class AppScaffold extends StatelessWidget {
-  final String title;
+  final String? title;
   final Widget body;
   final List<Widget>? actions;
   final Widget? floatingActionButton;
@@ -15,7 +15,7 @@ class AppScaffold extends StatelessWidget {
 
   const AppScaffold({
     super.key,
-    required this.title,
+    this.title,
     required this.body,
     this.actions,
     this.floatingActionButton,
@@ -100,23 +100,24 @@ class AppScaffold extends StatelessWidget {
           // Main Scroll Content optimized for 120Hz/144Hz HyperOS displays
           SafeArea(
             bottom: false,
-            child: NestedScrollView(
+            child: CustomScrollView(
               physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                if (showLargeTitle)
+              slivers: [
+                if (title != null && showLargeTitle)
                   SliverAppBar(
                     expandedHeight: 90.0,
                     floating: false,
-                    pinned: true,
-                    backgroundColor: bgColor.withValues(alpha: 0.85),
+                    pinned: false,
+                    backgroundColor: bgColor,
                     elevation: 0,
                     flexibleSpace: ClipRect(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                         child: FlexibleSpaceBar(
+                          collapseMode: CollapseMode.parallax,
                           titlePadding: const EdgeInsets.only(left: 20, bottom: 12),
                           title: Text(
-                            title,
+                            title!,
                             style: AppTypography.headline(isDark).copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
@@ -128,25 +129,25 @@ class AppScaffold extends StatelessWidget {
                     ),
                     actions: actions,
                   )
-                else
+                else if (title != null || actions != null)
                   SliverAppBar(
-                    pinned: true,
-                    title: Text(
-                      title,
+                    pinned: false,
+                    title: title != null ? Text(
+                      title!,
                       style: AppTypography.headline(isDark).copyWith(
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : AppColors.lightTextPrimary,
                       ),
-                    ),
+                    ) : null,
                     backgroundColor: bgColor.withValues(alpha: 0.85),
                     elevation: 0,
                     actions: actions,
                   ),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 96 + bottomInset),
+                  sliver: SliverToBoxAdapter(child: body),
+                ),
               ],
-              body: Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 96 + bottomInset),
-                child: isScrollable ? body : SingleChildScrollView(child: body),
-              ),
             ),
           ),
         ],

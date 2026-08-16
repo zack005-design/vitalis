@@ -48,46 +48,55 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           index: _currentIndex,
           children: _screens,
         ),
-      bottomNavigationBar: Container(
-        margin: EdgeInsets.fromLTRB(20, 0, 20, 10 + (bottomInset > 0 ? bottomInset : 10)),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              height: 68,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xE60B1326) // Deep midnight glass
-                    : const Color(0xEBFFFFFF),
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(
-                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
+      bottomNavigationBar: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: bottomInset > 0 ? bottomInset : 24,
+            left: 24,
+            right: 24,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(40),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+              child: Container(
+                height: 72,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0x99000000) // Deep translucent black
+                      : const Color(0xB3FFFFFF), // Frosted white
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(
+                    color: isDark 
+                        ? Colors.white.withValues(alpha: 0.1) 
+                        : Colors.black.withValues(alpha: 0.05),
+                    width: 0.5,
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _navItem(0, Icons.grid_view_rounded, isDark),
-                  _navItem(1, Icons.nightlight_round, isDark),
-                  _navItem(2, Icons.insights_rounded, isDark),
-                  _navItem(3, Icons.restaurant_rounded, isDark),
-                  _navItem(4, Icons.person_rounded, isDark),
-                ],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _navItem(0, Icons.grid_view_rounded, isDark),
+                    _navItem(1, Icons.bedtime_rounded, isDark),
+                    _navItem(2, Icons.insights_rounded, isDark),
+                    _navItem(3, Icons.restaurant_rounded, isDark),
+                    _navItem(4, Icons.person_rounded, isDark),
+                  ],
+                ),
               ),
             ),
           ),
-          ),
         ),
+      ),
       ),
     );
   }
@@ -103,9 +112,15 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget _navItem(int index, IconData icon, bool isDark) {
     final isSelected = _currentIndex == index;
     final label = _navLabels[index];
-    final activeBg = isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0);
+    
+    // Premium color palette for the nav items
+    final activeBg = isDark 
+        ? Colors.white.withValues(alpha: 0.15) 
+        : AppColors.primaryBlue.withValues(alpha: 0.1);
     final activeIconColor = isDark ? Colors.white : AppColors.primaryBlue;
-    final inactiveIconColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final inactiveIconColor = isDark 
+        ? Colors.white.withValues(alpha: 0.4) 
+        : Colors.black.withValues(alpha: 0.4);
 
     return Semantics(
       label: label,
@@ -122,36 +137,38 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           }
         },
         behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: 52,
-          height: 52,
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              width: isSelected ? 52 : 44,
-              height: isSelected ? 52 : 44,
-              decoration: BoxDecoration(
-                color: isSelected ? activeBg : Colors.transparent,
-                shape: BoxShape.circle,
-                boxShadow: isSelected && isDark
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          padding: EdgeInsets.symmetric(
+            horizontal: isSelected ? 16.0 : 12.0,
+            vertical: 12.0,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected ? activeBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 24,
+                color: isSelected ? activeIconColor : inactiveIconColor,
               ),
-              child: Center(
-                child: Icon(
-                  icon,
-                  size: isSelected ? 24 : 22,
-                  color: isSelected ? activeIconColor : inactiveIconColor,
+              if (isSelected) ...[
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: activeIconColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-            ),
+              ]
+            ],
           ),
         ),
       ),

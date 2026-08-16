@@ -58,9 +58,13 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   }
 
   int get _calculatedTdee {
-    final age = int.tryParse(_ageController.text) ?? 28;
-    final height = double.tryParse(_heightController.text) ?? 175;
-    final weight = double.tryParse(_weightController.text) ?? 72;
+    final a = int.tryParse(_ageController.text) ?? 28;
+    final h = double.tryParse(_heightController.text) ?? 175;
+    final w = double.tryParse(_weightController.text) ?? 72;
+    
+    final age = a < 10 ? 28 : (a > 120 ? 120 : a);
+    final height = h < 100 ? 175.0 : (h > 250 ? 250.0 : h);
+    final weight = w < 30 ? 72.0 : (w > 300 ? 300.0 : w);
 
     return BmrTdeeCalculator.calculateTdee(
       weightKg: weight,
@@ -74,9 +78,13 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   Future<void> _save() async {
     setState(() => _isSaving = true);
     final tdee = _calculatedTdee;
-    final age = int.tryParse(_ageController.text) ?? 28;
-    final height = double.tryParse(_heightController.text) ?? 175;
-    final weight = double.tryParse(_weightController.text) ?? 72;
+    final a = int.tryParse(_ageController.text) ?? 28;
+    final h = double.tryParse(_heightController.text) ?? 175;
+    final w = double.tryParse(_weightController.text) ?? 72;
+    
+    final age = a < 10 ? 28 : (a > 120 ? 120 : a);
+    final height = h < 100 ? 175.0 : (h > 250 ? 250.0 : h);
+    final weight = w < 30 ? 72.0 : (w > 300 ? 300.0 : w);
 
     await ref.read(userProfileProvider.notifier).updateProfile(
       name: _nameController.text.trim(),
@@ -240,23 +248,19 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   isExpanded: true,
+                  isDense: false,
+                  itemHeight: 56,
                   initialValue: _activityLevel,
-                  dropdownColor: isDark ? const Color(0xFF171F33) : Colors.white,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.lightTextPrimary,
-                    fontSize: 14,
-                  ),
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.directions_run_rounded, color: AppColors.primaryBlue),
                     filled: true,
                     fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
+                    prefixIcon: const Icon(Icons.directions_run_rounded, color: AppColors.primaryBlue),
                   ),
                   items: const [
                     DropdownMenuItem(value: "Sedentary", child: Text("Sedentary (Little/no exercise)")),

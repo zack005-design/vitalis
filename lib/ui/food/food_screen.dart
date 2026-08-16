@@ -8,6 +8,7 @@ import '../design_system/app_typography.dart';
 import '../design_system/glass_container.dart';
 import 'add_custom_food_sheet.dart';
 import 'food_search_sheet.dart';
+import 'quick_add_food_sheet.dart';
 
 class FoodScreen extends ConsumerWidget {
   const FoodScreen({super.key});
@@ -27,47 +28,67 @@ class FoodScreen extends ConsumerWidget {
           Semantics(
             button: true,
             label: "Search foods, meals, or dishes",
-            child: GestureDetector(
-              onTap: () => FoodSearchSheet.show(context),
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 48),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF171F33) : Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
-                    width: 1.2,
-                  ),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF171F33) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? AppColors.darkCardBorder : AppColors.lightCardBorder,
+                  width: 1.2,
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search_rounded, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, size: 22),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        "Search foods, meals, or dishes...",
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => FoodSearchSheet.show(context),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.search_rounded, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, size: 22),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "Search foods, meals, or dishes...",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF222A3E) : const Color(0xFFE2E8F0),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.qr_code_scanner_rounded,
-                        size: 18,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.primaryBlue,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Barcode scanning coming soon')),
+                      );
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16, top: 10, bottom: 10),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF222A3E) : AppColors.primaryBlue.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.qr_code_scanner_rounded,
+                          size: 18,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.primaryBlue,
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -82,7 +103,7 @@ class FoodScreen extends ConsumerWidget {
                   label: "My Meals",
                   color: AppColors.calorieAccent,
                   isDark: isDark,
-                  onTap: () => FoodSearchSheet.show(context),
+                  onTap: () => FoodSearchSheet.show(context, initialCategory: "Recent"),
                 ),
               ),
               const SizedBox(width: 12),
@@ -92,7 +113,7 @@ class FoodScreen extends ConsumerWidget {
                   label: "Favorites",
                   color: Colors.amber,
                   isDark: isDark,
-                  onTap: () => FoodSearchSheet.show(context),
+                  onTap: () => FoodSearchSheet.show(context, initialCategory: "Favorites"),
                 ),
               ),
             ],
@@ -106,7 +127,7 @@ class FoodScreen extends ConsumerWidget {
                   label: "Quick Add",
                   color: AppColors.primaryBlue,
                   isDark: isDark,
-                  onTap: () => FoodSearchSheet.show(context),
+                  onTap: () => QuickAddFoodSheet.show(context),
                 ),
               ),
               const SizedBox(width: 12),
@@ -170,14 +191,10 @@ class FoodScreen extends ConsumerWidget {
                 );
               }
 
-              return ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: meals.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final meal = meals[index];
-                  return GlassContainer(
+              return Column(
+                children: meals.map((meal) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
@@ -213,7 +230,7 @@ class FoodScreen extends ConsumerWidget {
                         ),
                         Text(
                           "${meal.calories} kcal",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: AppColors.calorieAccent,
@@ -240,8 +257,8 @@ class FoodScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                  );
-                },
+                  ),
+                )).toList(),
               );
             },
           ),

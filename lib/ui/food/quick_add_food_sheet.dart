@@ -1,8 +1,9 @@
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' as drift;
 import '../../data/local/app_database.dart';
 import '../../domain/food/food_providers.dart';
+import '../../data/health/health_connect_client.dart';
 import '../design_system/app_button.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_text_field.dart';
@@ -10,38 +11,34 @@ import '../design_system/app_typography.dart';
 import '../design_system/bottom_sheet_modal.dart';
 import '../design_system/glass_container.dart';
 
-class AddCustomFoodSheet extends ConsumerStatefulWidget {
-  const AddCustomFoodSheet({super.key});
+class QuickAddFoodSheet extends ConsumerStatefulWidget {
+  const QuickAddFoodSheet({super.key});
 
   static Future<void> show(BuildContext context) {
     return BottomSheetModal.show(
       context: context,
-      title: "Create Food",
-      child: const AddCustomFoodSheet(),
+      title: "Quick Add Calories",
+      child: const QuickAddFoodSheet(),
     );
   }
 
   @override
-  ConsumerState<AddCustomFoodSheet> createState() => _AddCustomFoodSheetState();
+  ConsumerState<QuickAddFoodSheet> createState() => _QuickAddFoodSheetState();
 }
 
-class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
-  final _nameController = TextEditingController();
+class _QuickAddFoodSheetState extends ConsumerState<QuickAddFoodSheet> {
   final _caloriesController = TextEditingController();
-  final _servingController = TextEditingController(text: "1");
   final _proteinController = TextEditingController();
   final _carbsController = TextEditingController();
   final _fatController = TextEditingController();
 
   bool _isSaving = false;
-  String? _nameError;
   String? _caloriesError;
   String? _proteinError;
   String? _carbsError;
   String? _fatError;
 
   bool _validateFields() {
-    final name = _nameController.text.trim();
     final calories = int.tryParse(_caloriesController.text.trim());
     final protein = double.tryParse(_proteinController.text.trim());
     final carbs = double.tryParse(_carbsController.text.trim());
@@ -49,7 +46,6 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
 
     bool valid = true;
     setState(() {
-      _nameError = name.isEmpty ? 'Name is required' : null;
       _caloriesError = (calories == null || calories <= 0)
           ? 'Enter a number > 0'
           : calories > 5000
@@ -65,55 +61,63 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
           ? 'Enter 0–500g'
           : null;
 
-      valid = _nameError == null && _caloriesError == null && _proteinError == null &&
-              _carbsError == null && _fatError == null;
+      valid = _caloriesError == null && _proteinError == null && _carbsError == null && _fatError == null;
     });
     return valid;
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _caloriesController.dispose();
-    _servingController.dispose();
     _proteinController.dispose();
     _carbsController.dispose();
     _fatController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveCustomFood() async {
+  Future<void> _saveQuickAdd() async {
     if (!_validateFields()) return;
 
-    final name = _nameController.text.trim();
     final calories = int.parse(_caloriesController.text.trim());
+    final protein = double.tryParse(_proteinController.text.trim());
+    final carbs = double.tryParse(_carbsController.text.trim());
+    final fat = double.tryParse(_fatController.text.trim());
 
     setState(() => _isSaving = true);
 
     final db = ref.read(appDatabaseProvider);
     try {
-      await db.insertCustomFood(
-        CustomFoodsCompanion(
-          name: drift.Value(name),
-          caloriesPerServing: drift.Value(calories),
-          servingDescription: drift.Value(_servingController.text.trim()),
-          proteinG: drift.Value(double.tryParse(_proteinController.text.trim())),
-          carbsG: drift.Value(double.tryParse(_carbsController.text.trim())),
-          fatG: drift.Value(double.tryParse(_fatController.text.trim())),
-          createdAt: drift.Value(DateTime.now()),
+      await db.insertMeal(
+        MealsCompanion(
+          timestamp: drift.Value(DateTime.now()),
+          name: const drift.Value("Quick Add"),
+          calories: drift.Value(calories),
+          proteinG: drift.Value(protein),
+          carbsG: drift.Value(carbs),
+          fatG: drift.Value(fat),
+          source: const drift.Value("custom"),
         ),
+      );
+
+      // Background sync to Health Connect
+      HealthConnectClient().writeMealNutrition(
+        calories: calories,
+        proteinG: protein,
+        carbsG: carbs,
+        fatG: fat,
+        timestamp: DateTime.now(),
       );
 
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added "$name" to Custom Dish Library!')),
+          SnackBar(content: Text('Quick added $calories kcal!')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save food: $e')),
+          SnackBar(content: Text('Failed to save quick add: $e')),
         );
       }
     } finally {
@@ -131,60 +135,26 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Primary Details Card
           GlassContainer(
             padding: const EdgeInsets.all(18),
             child: Column(
               children: [
                 AppTextField(
-                  label: "Food Name",
-                  placeholder: "e.g., Avocado Toast / Kerala Fish Curry",
-                  controller: _nameController,
+                  label: "Calories (kcal)",
+                  placeholder: "e.g. 250",
+                  controller: _caloriesController,
+                  keyboardType: TextInputType.number,
                   autofocus: true,
                 ),
-                if (_nameError != null)
+                if (_caloriesError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4, left: 4),
-                    child: Text(_nameError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                    child: Text(_caloriesError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
                   ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: "Serving Size",
-                        placeholder: "e.g., 1, 2.5",
-                        controller: _servingController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppTextField(
-                            label: "Calories (kcal)",
-                            placeholder: "0",
-                            controller: _caloriesController,
-                            keyboardType: TextInputType.number,
-                          ),
-                          if (_caloriesError != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 4),
-                              child: Text(_caloriesError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-
-          // Macronutrients Card (Stitch UI Spec with icon boxes)
           GlassContainer(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -193,10 +163,7 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "Macronutrients",
-                      style: AppTypography.headline(isDark).copyWith(fontSize: 17),
-                    ),
+                    Text("Macronutrients", style: AppTypography.headline(isDark).copyWith(fontSize: 17)),
                     Text("Optional", style: AppTypography.labelSm(isDark)),
                   ],
                 ),
@@ -204,7 +171,6 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Protein Box
                     Expanded(
                       child: Column(
                         children: [
@@ -218,17 +184,12 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                           if (_proteinError != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                _proteinError!,
-                                style: const TextStyle(color: Colors.red, fontSize: 11),
-                                textAlign: TextAlign.center,
-                              ),
+                              child: Text(_proteinError!, style: const TextStyle(color: Colors.red, fontSize: 11)),
                             ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Carbs Box
                     Expanded(
                       child: Column(
                         children: [
@@ -242,17 +203,12 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                           if (_carbsError != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                _carbsError!,
-                                style: const TextStyle(color: Colors.red, fontSize: 11),
-                                textAlign: TextAlign.center,
-                              ),
+                              child: Text(_carbsError!, style: const TextStyle(color: Colors.red, fontSize: 11)),
                             ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Fat Box
                     Expanded(
                       child: Column(
                         children: [
@@ -266,11 +222,7 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
                           if (_fatError != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                _fatError!,
-                                style: const TextStyle(color: Colors.red, fontSize: 11),
-                                textAlign: TextAlign.center,
-                              ),
+                              child: Text(_fatError!, style: const TextStyle(color: Colors.red, fontSize: 11)),
                             ),
                         ],
                       ),
@@ -281,13 +233,11 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Save Button
           AppButton(
-            label: "Save to Library",
-            icon: Icons.check_circle_rounded,
+            label: "Log Calories",
+            icon: Icons.add_circle_outline_rounded,
             isLoading: _isSaving,
-            onPressed: _saveCustomFood,
+            onPressed: _saveQuickAdd,
           ),
           const SizedBox(height: 16),
         ],

@@ -55,6 +55,12 @@ final todayMealsProvider = StreamProvider<List<Meal>>((ref) {
   return db.watchTodayMeals(todayStart);
 });
 
+// Favorite Foods Stream Provider
+final favoriteFoodsProvider = StreamProvider<List<FavoriteFood>>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.watchFavoriteFoods();
+});
+
 // Today Water Logs Stream Provider
 final todayWaterLogsProvider = StreamProvider<List<WaterLog>>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -64,22 +70,40 @@ final todayWaterLogsProvider = StreamProvider<List<WaterLog>>((ref) {
   return db.watchTodayWaterLogs(todayStart);
 });
 
+// Nutrition Summary (Calories & Macros) for Reactive Dashboard
+class NutritionSummary {
+  final int calories;
+  final double protein;
+  final double carbs;
+  final double fat;
+  const NutritionSummary({this.calories = 0, this.protein = 0, this.carbs = 0, this.fat = 0});
+}
+
+final todaysNutritionSummaryProvider = Provider<NutritionSummary>((ref) {
+  final mealsAsync = ref.watch(todayMealsProvider);
+  final meals = mealsAsync.valueOrNull ?? [];
+  int cal = 0;
+  double p = 0;
+  double c = 0;
+  double f = 0;
+  for (final m in meals) {
+    cal += m.calories;
+    p += m.proteinG ?? 0;
+    c += m.carbsG ?? 0;
+    f += m.fatG ?? 0;
+  }
+  return NutritionSummary(calories: cal, protein: p, carbs: c, fat: f);
+});
+
 // Total Calories Logged Today
 final totalCaloriesTodayProvider = Provider<int>((ref) {
-  final mealsAsync = ref.watch(todayMealsProvider);
-  return mealsAsync.maybeWhen(
-    data: (meals) => meals.fold<int>(0, (sum, meal) => sum + meal.calories),
-    orElse: () => 0,
-  );
+  return ref.watch(todaysNutritionSummaryProvider).calories;
 });
 
 // Total Water Logged Today (in ml)
 final totalWaterMlTodayProvider = Provider<int>((ref) {
   final waterLogsAsync = ref.watch(todayWaterLogsProvider);
-  return waterLogsAsync.maybeWhen(
-    data: (logs) => logs.fold<int>(0, (sum, log) => sum + log.amountMl),
-    orElse: () => 0,
-  );
+  return waterLogsAsync.valueOrNull?.fold<int>(0, (sum, log) => sum + log.amountMl) ?? 0;
 });
 
 // Food Search Query State Provider
@@ -138,25 +162,27 @@ List<double> _buildHistoryArray(List<Map<String, dynamic>> grouped, int days, Da
 }
 
 // Calorie history for insights charts — last N days, per day total
-final calorieHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
+final calorieHistoryProvider = StreamProvider.family<List<double>, int>((ref, days) {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
   final startDay = DateTime(now.year, now.month, now.day - (days - 1));
   final endDay = DateTime(now.year, now.month, now.day + 1);
 
-  final grouped = await db.getDailyCaloriesForDateRange(startDay, endDay);
-  return _buildHistoryArray(grouped, days, now);
+  return db.watchDailyCaloriesForDateRange(startDay, endDay).map((grouped) {
+    return _buildHistoryArray(grouped, days, now);
+  });
 });
 
 // Water history for insights charts — last N days, per day total in ml
-final waterHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
+final waterHistoryProvider = StreamProvider.family<List<double>, int>((ref, days) {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
   final startDay = DateTime(now.year, now.month, now.day - (days - 1));
   final endDay = DateTime(now.year, now.month, now.day + 1);
 
-  final grouped = await db.getDailyWaterForDateRange(startDay, endDay);
-  return _buildHistoryArray(grouped, days, now);
+  return db.watchDailyWaterForDateRange(startDay, endDay).map((grouped) {
+    return _buildHistoryArray(grouped, days, now);
+  });
 });
 
 class DailyMacros {
@@ -168,63 +194,61 @@ class DailyMacros {
 
 // Macro history for insights charts — last N days, per day totals
 // Uses a single batched DB query instead of N individual queries for performance.
-final macroHistoryProvider = FutureProvider.family<List<DailyMacros>, int>((ref, days) async {
+final macroHistoryProvider = StreamProvider.family<List<DailyMacros>, int>((ref, days) {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
   final startDay = DateTime(now.year, now.month, now.day - (days - 1));
   final endDay = DateTime(now.year, now.month, now.day + 1);
 
-  // Single query for the full range
-  final allMeals = await db.getMealsForDateRange(startDay, endDay);
+  return db.watchMealsForDateRange(startDay, endDay).map((allMeals) {
+    // Group by date string (YYYY-MM-DD) in Dart
+    final Map<String, DailyMacros> byDate = {};
+    for (final m in allMeals) {
+      final dateKey = m.timestamp.toIso8601String().substring(0, 10);
+      final existing = byDate[dateKey] ?? const DailyMacros();
+      byDate[dateKey] = DailyMacros(
+        protein: existing.protein + (m.proteinG ?? 0),
+        carbs: existing.carbs + (m.carbsG ?? 0),
+        fat: existing.fat + (m.fatG ?? 0),
+      );
+    }
 
-  // Group by date string (YYYY-MM-DD) in Dart
-  final Map<String, DailyMacros> byDate = {};
-  for (final m in allMeals) {
-    final dateKey = m.timestamp.toIso8601String().substring(0, 10);
-    final existing = byDate[dateKey] ?? const DailyMacros();
-    byDate[dateKey] = DailyMacros(
-      protein: existing.protein + (m.proteinG ?? 0),
-      carbs: existing.carbs + (m.carbsG ?? 0),
-      fat: existing.fat + (m.fatG ?? 0),
-    );
-  }
-
-  // Build ordered result array — one entry per day, oldest to newest
-  final List<DailyMacros> result = [];
-  for (int i = days - 1; i >= 0; i--) {
-    final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dateKey = dayStart.toIso8601String().substring(0, 10);
-    result.add(byDate[dateKey] ?? const DailyMacros());
-  }
-  return result;
+    // Build ordered result array — one entry per day, oldest to newest
+    final List<DailyMacros> result = [];
+    for (int i = days - 1; i >= 0; i--) {
+      final dayStart = DateTime(now.year, now.month, now.day - i);
+      final dateKey = dayStart.toIso8601String().substring(0, 10);
+      result.add(byDate[dateKey] ?? const DailyMacros());
+    }
+    return result;
+  });
 });
 
 // Sleep history for insights charts — last N days, per day total in hours.
 // Uses a single batched DB query instead of N individual queries for performance.
-final sleepHistoryProvider = FutureProvider.family<List<double>, int>((ref, days) async {
+final sleepHistoryProvider = StreamProvider.family<List<double>, int>((ref, days) {
   final db = ref.watch(appDatabaseProvider);
   final now = DateTime.now();
   final startDay = DateTime(now.year, now.month, now.day - (days - 1));
   final endDay = DateTime(now.year, now.month, now.day + 1);
 
-  // Single query for the full range
-  final allSleep = await db.getSleepNotesForDateRange(startDay, endDay);
+  return db.watchSleepNotesForDateRange(startDay, endDay).map((allSleep) {
+    // Group by date string in Dart
+    final Map<String, int> minutesByDate = {};
+    for (final s in allSleep) {
+      final dateKey = s.date.toIso8601String().substring(0, 10);
+      minutesByDate[dateKey] = (minutesByDate[dateKey] ?? 0) + s.durationMinutes;
+    }
 
-  // Group by date string in Dart
-  final Map<String, int> minutesByDate = {};
-  for (final s in allSleep) {
-    final dateKey = s.date.toIso8601String().substring(0, 10);
-    minutesByDate[dateKey] = (minutesByDate[dateKey] ?? 0) + s.durationMinutes;
-  }
-
-  // Build ordered result array — one entry per day
-  final List<double> result = [];
-  for (int i = days - 1; i >= 0; i--) {
-    final dayStart = DateTime(now.year, now.month, now.day - i);
-    final dateKey = dayStart.toIso8601String().substring(0, 10);
-    result.add((minutesByDate[dateKey] ?? 0) / 60.0);
-  }
-  return result;
+    // Build ordered result array — one entry per day
+    final List<double> result = [];
+    for (int i = days - 1; i >= 0; i--) {
+      final dayStart = DateTime(now.year, now.month, now.day - i);
+      final dateKey = dayStart.toIso8601String().substring(0, 10);
+      result.add((minutesByDate[dateKey] ?? 0) / 60.0);
+    }
+    return result;
+  });
 });
 
 // Dynamic User Calorie Target Provider (Mifflin-St Jeor / Profile-linked)

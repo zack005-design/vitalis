@@ -92,6 +92,7 @@ class FakeHealthError extends Health {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('HealthConnectClient - Macronutrients', () {
     test('writeMealNutrition passes protein, carbs, and fat to health.writeMeal', () async {
       final fakeHealth = FakeHealth();

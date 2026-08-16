@@ -13,8 +13,9 @@ class NotificationService {
   Future<void> initialize() async {
     tz.initializeTimeZones();
     try {
-      final String timezoneName = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timezoneName));
+      // flutter_timezone v5 returns TimezoneInfo; use .identifier for the IANA string
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
     } catch (_) {
       // Fallback if platform channel is not available (e.g. unit tests)
     }

@@ -13,7 +13,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.2%2B-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
 [![Android](https://img.shields.io/badge/Android-minSdk%2026-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.0.0-blueviolet?style=for-the-badge)](pubspec.yaml)
+[![Version](https://img.shields.io/badge/Version-1.2.0-blueviolet?style=for-the-badge)](pubspec.yaml)
 
 <br/>
 

@@ -87,16 +87,12 @@ class TodayScreen extends ConsumerWidget {
     final calorieRatio = (totalCaloriesLogged / targetCalories).clamp(0.0, 1.0);
     final waterRatio = (totalWaterLogged / targetWaterMl).clamp(0.0, 1.0);
 
-    // Compute macro totals from logged meals
+    // Watch synchronized nutrition summary for header cards
+    final summary = ref.watch(todaysNutritionSummaryProvider);
     final meals = mealsAsync.value ?? [];
-    double totalProtein = 0;
-    double totalCarbs = 0;
-    double totalFat = 0;
-    for (final m in meals) {
-      totalProtein += m.proteinG ?? 0;
-      totalCarbs += m.carbsG ?? 0;
-      totalFat += m.fatG ?? 0;
-    }
+    final double totalProtein = summary.protein;
+    final double totalCarbs = summary.carbs;
+    final double totalFat = summary.fat;
 
     // Target macros (estimated 30% Protein, 45% Carbs, 25% Fat)
     final targetProtein = ((targetCalories * 0.30) / 4).roundToDouble();

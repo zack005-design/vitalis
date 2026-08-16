@@ -50,7 +50,7 @@ class AppTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: border, width: 1.0),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
@@ -58,6 +58,8 @@ class AppTextField extends StatelessWidget {
             autofocus: autofocus,
             style: AppTypography.body(isDark),
             decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
               border: InputBorder.none,
               hintText: placeholder,
               hintStyle: AppTypography.body(isDark).copyWith(

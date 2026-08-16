@@ -2,9 +2,9 @@ import 'package:calorie_sleep_tracker/data/local/app_database.dart';
 import 'package:calorie_sleep_tracker/domain/food/food_providers.dart';
 import 'package:calorie_sleep_tracker/domain/profile/profile_provider.dart';
 import 'package:calorie_sleep_tracker/domain/shared_preferences_provider.dart';
-import 'package:calorie_sleep_tracker/ui/main_navigation_shell.dart';
-import 'package:calorie_sleep_tracker/ui/more/edit_profile_sheet.dart';
-import 'package:calorie_sleep_tracker/ui/more/more_screen.dart';
+import 'package:calorie_sleep_tracker/ui_legacy/more/edit_profile_sheet.dart';
+import 'package:calorie_sleep_tracker/ui_v2/main_navigation_shell.dart';
+import 'package:calorie_sleep_tracker/ui_v2/more/more_screen.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -149,7 +149,7 @@ void main() {
       expect(indexedStack.index, equals(0));
 
       // Now switch to Sleep tab (icon: nightlight_round, index 1)
-      final sleepTab = find.byIcon(Icons.nightlight_round).last;
+      final sleepTab = find.byIcon(Icons.bedtime_rounded).last;
       await tester.tap(sleepTab);
       await tester.pump();
 

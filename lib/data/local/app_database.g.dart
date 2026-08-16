@@ -1575,6 +1575,463 @@ class WaterLogsCompanion extends UpdateCompanion<WaterLog> {
   }
 }
 
+class $FavoriteFoodsTable extends FavoriteFoods
+    with TableInfo<$FavoriteFoodsTable, FavoriteFood> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FavoriteFoodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _caloriesMeta =
+      const VerificationMeta('calories');
+  @override
+  late final GeneratedColumn<int> calories = GeneratedColumn<int>(
+      'calories', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _proteinGMeta =
+      const VerificationMeta('proteinG');
+  @override
+  late final GeneratedColumn<double> proteinG = GeneratedColumn<double>(
+      'protein_g', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _carbsGMeta = const VerificationMeta('carbsG');
+  @override
+  late final GeneratedColumn<double> carbsG = GeneratedColumn<double>(
+      'carbs_g', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _fatGMeta = const VerificationMeta('fatG');
+  @override
+  late final GeneratedColumn<double> fatG = GeneratedColumn<double>(
+      'fat_g', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _servingDescriptionMeta =
+      const VerificationMeta('servingDescription');
+  @override
+  late final GeneratedColumn<String> servingDescription =
+      GeneratedColumn<String>('serving_description', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+      'source', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        calories,
+        proteinG,
+        carbsG,
+        fatG,
+        servingDescription,
+        source,
+        createdAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'favorite_foods';
+  @override
+  VerificationContext validateIntegrity(Insertable<FavoriteFood> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('calories')) {
+      context.handle(_caloriesMeta,
+          calories.isAcceptableOrUnknown(data['calories']!, _caloriesMeta));
+    } else if (isInserting) {
+      context.missing(_caloriesMeta);
+    }
+    if (data.containsKey('protein_g')) {
+      context.handle(_proteinGMeta,
+          proteinG.isAcceptableOrUnknown(data['protein_g']!, _proteinGMeta));
+    }
+    if (data.containsKey('carbs_g')) {
+      context.handle(_carbsGMeta,
+          carbsG.isAcceptableOrUnknown(data['carbs_g']!, _carbsGMeta));
+    }
+    if (data.containsKey('fat_g')) {
+      context.handle(
+          _fatGMeta, fatG.isAcceptableOrUnknown(data['fat_g']!, _fatGMeta));
+    }
+    if (data.containsKey('serving_description')) {
+      context.handle(
+          _servingDescriptionMeta,
+          servingDescription.isAcceptableOrUnknown(
+              data['serving_description']!, _servingDescriptionMeta));
+    } else if (isInserting) {
+      context.missing(_servingDescriptionMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta,
+          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FavoriteFood map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FavoriteFood(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      calories: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}calories'])!,
+      proteinG: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}protein_g']),
+      carbsG: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}carbs_g']),
+      fatG: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}fat_g']),
+      servingDescription: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}serving_description'])!,
+      source: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $FavoriteFoodsTable createAlias(String alias) {
+    return $FavoriteFoodsTable(attachedDatabase, alias);
+  }
+}
+
+class FavoriteFood extends DataClass implements Insertable<FavoriteFood> {
+  final int id;
+  final String name;
+  final int calories;
+  final double? proteinG;
+  final double? carbsG;
+  final double? fatG;
+  final String servingDescription;
+  final String source;
+  final DateTime createdAt;
+  const FavoriteFood(
+      {required this.id,
+      required this.name,
+      required this.calories,
+      this.proteinG,
+      this.carbsG,
+      this.fatG,
+      required this.servingDescription,
+      required this.source,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['calories'] = Variable<int>(calories);
+    if (!nullToAbsent || proteinG != null) {
+      map['protein_g'] = Variable<double>(proteinG);
+    }
+    if (!nullToAbsent || carbsG != null) {
+      map['carbs_g'] = Variable<double>(carbsG);
+    }
+    if (!nullToAbsent || fatG != null) {
+      map['fat_g'] = Variable<double>(fatG);
+    }
+    map['serving_description'] = Variable<String>(servingDescription);
+    map['source'] = Variable<String>(source);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FavoriteFoodsCompanion toCompanion(bool nullToAbsent) {
+    return FavoriteFoodsCompanion(
+      id: Value(id),
+      name: Value(name),
+      calories: Value(calories),
+      proteinG: proteinG == null && nullToAbsent
+          ? const Value.absent()
+          : Value(proteinG),
+      carbsG:
+          carbsG == null && nullToAbsent ? const Value.absent() : Value(carbsG),
+      fatG: fatG == null && nullToAbsent ? const Value.absent() : Value(fatG),
+      servingDescription: Value(servingDescription),
+      source: Value(source),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FavoriteFood.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FavoriteFood(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      calories: serializer.fromJson<int>(json['calories']),
+      proteinG: serializer.fromJson<double?>(json['proteinG']),
+      carbsG: serializer.fromJson<double?>(json['carbsG']),
+      fatG: serializer.fromJson<double?>(json['fatG']),
+      servingDescription:
+          serializer.fromJson<String>(json['servingDescription']),
+      source: serializer.fromJson<String>(json['source']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'calories': serializer.toJson<int>(calories),
+      'proteinG': serializer.toJson<double?>(proteinG),
+      'carbsG': serializer.toJson<double?>(carbsG),
+      'fatG': serializer.toJson<double?>(fatG),
+      'servingDescription': serializer.toJson<String>(servingDescription),
+      'source': serializer.toJson<String>(source),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FavoriteFood copyWith(
+          {int? id,
+          String? name,
+          int? calories,
+          Value<double?> proteinG = const Value.absent(),
+          Value<double?> carbsG = const Value.absent(),
+          Value<double?> fatG = const Value.absent(),
+          String? servingDescription,
+          String? source,
+          DateTime? createdAt}) =>
+      FavoriteFood(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        calories: calories ?? this.calories,
+        proteinG: proteinG.present ? proteinG.value : this.proteinG,
+        carbsG: carbsG.present ? carbsG.value : this.carbsG,
+        fatG: fatG.present ? fatG.value : this.fatG,
+        servingDescription: servingDescription ?? this.servingDescription,
+        source: source ?? this.source,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  FavoriteFood copyWithCompanion(FavoriteFoodsCompanion data) {
+    return FavoriteFood(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      calories: data.calories.present ? data.calories.value : this.calories,
+      proteinG: data.proteinG.present ? data.proteinG.value : this.proteinG,
+      carbsG: data.carbsG.present ? data.carbsG.value : this.carbsG,
+      fatG: data.fatG.present ? data.fatG.value : this.fatG,
+      servingDescription: data.servingDescription.present
+          ? data.servingDescription.value
+          : this.servingDescription,
+      source: data.source.present ? data.source.value : this.source,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FavoriteFood(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('calories: $calories, ')
+          ..write('proteinG: $proteinG, ')
+          ..write('carbsG: $carbsG, ')
+          ..write('fatG: $fatG, ')
+          ..write('servingDescription: $servingDescription, ')
+          ..write('source: $source, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, calories, proteinG, carbsG, fatG,
+      servingDescription, source, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FavoriteFood &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.calories == this.calories &&
+          other.proteinG == this.proteinG &&
+          other.carbsG == this.carbsG &&
+          other.fatG == this.fatG &&
+          other.servingDescription == this.servingDescription &&
+          other.source == this.source &&
+          other.createdAt == this.createdAt);
+}
+
+class FavoriteFoodsCompanion extends UpdateCompanion<FavoriteFood> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> calories;
+  final Value<double?> proteinG;
+  final Value<double?> carbsG;
+  final Value<double?> fatG;
+  final Value<String> servingDescription;
+  final Value<String> source;
+  final Value<DateTime> createdAt;
+  const FavoriteFoodsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.calories = const Value.absent(),
+    this.proteinG = const Value.absent(),
+    this.carbsG = const Value.absent(),
+    this.fatG = const Value.absent(),
+    this.servingDescription = const Value.absent(),
+    this.source = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  FavoriteFoodsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required int calories,
+    this.proteinG = const Value.absent(),
+    this.carbsG = const Value.absent(),
+    this.fatG = const Value.absent(),
+    required String servingDescription,
+    required String source,
+    this.createdAt = const Value.absent(),
+  })  : name = Value(name),
+        calories = Value(calories),
+        servingDescription = Value(servingDescription),
+        source = Value(source);
+  static Insertable<FavoriteFood> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? calories,
+    Expression<double>? proteinG,
+    Expression<double>? carbsG,
+    Expression<double>? fatG,
+    Expression<String>? servingDescription,
+    Expression<String>? source,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (calories != null) 'calories': calories,
+      if (proteinG != null) 'protein_g': proteinG,
+      if (carbsG != null) 'carbs_g': carbsG,
+      if (fatG != null) 'fat_g': fatG,
+      if (servingDescription != null) 'serving_description': servingDescription,
+      if (source != null) 'source': source,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  FavoriteFoodsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<int>? calories,
+      Value<double?>? proteinG,
+      Value<double?>? carbsG,
+      Value<double?>? fatG,
+      Value<String>? servingDescription,
+      Value<String>? source,
+      Value<DateTime>? createdAt}) {
+    return FavoriteFoodsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      calories: calories ?? this.calories,
+      proteinG: proteinG ?? this.proteinG,
+      carbsG: carbsG ?? this.carbsG,
+      fatG: fatG ?? this.fatG,
+      servingDescription: servingDescription ?? this.servingDescription,
+      source: source ?? this.source,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (calories.present) {
+      map['calories'] = Variable<int>(calories.value);
+    }
+    if (proteinG.present) {
+      map['protein_g'] = Variable<double>(proteinG.value);
+    }
+    if (carbsG.present) {
+      map['carbs_g'] = Variable<double>(carbsG.value);
+    }
+    if (fatG.present) {
+      map['fat_g'] = Variable<double>(fatG.value);
+    }
+    if (servingDescription.present) {
+      map['serving_description'] = Variable<String>(servingDescription.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FavoriteFoodsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('calories: $calories, ')
+          ..write('proteinG: $proteinG, ')
+          ..write('carbsG: $carbsG, ')
+          ..write('fatG: $fatG, ')
+          ..write('servingDescription: $servingDescription, ')
+          ..write('source: $source, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1582,6 +2039,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CustomFoodsTable customFoods = $CustomFoodsTable(this);
   late final $SleepNotesTable sleepNotes = $SleepNotesTable(this);
   late final $WaterLogsTable waterLogs = $WaterLogsTable(this);
+  late final $FavoriteFoodsTable favoriteFoods = $FavoriteFoodsTable(this);
   late final Index mealsTimestampIdx = Index('meals_timestamp_idx',
       'CREATE INDEX meals_timestamp_idx ON meals (timestamp)');
   late final Index sleepDateIdx = Index(
@@ -1597,6 +2055,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         customFoods,
         sleepNotes,
         waterLogs,
+        favoriteFoods,
         mealsTimestampIdx,
         sleepDateIdx,
         waterTimestampIdx
@@ -2383,6 +2842,235 @@ typedef $$WaterLogsTableProcessedTableManager = ProcessedTableManager<
     (WaterLog, BaseReferences<_$AppDatabase, $WaterLogsTable, WaterLog>),
     WaterLog,
     PrefetchHooks Function()>;
+typedef $$FavoriteFoodsTableCreateCompanionBuilder = FavoriteFoodsCompanion
+    Function({
+  Value<int> id,
+  required String name,
+  required int calories,
+  Value<double?> proteinG,
+  Value<double?> carbsG,
+  Value<double?> fatG,
+  required String servingDescription,
+  required String source,
+  Value<DateTime> createdAt,
+});
+typedef $$FavoriteFoodsTableUpdateCompanionBuilder = FavoriteFoodsCompanion
+    Function({
+  Value<int> id,
+  Value<String> name,
+  Value<int> calories,
+  Value<double?> proteinG,
+  Value<double?> carbsG,
+  Value<double?> fatG,
+  Value<String> servingDescription,
+  Value<String> source,
+  Value<DateTime> createdAt,
+});
+
+class $$FavoriteFoodsTableFilterComposer
+    extends Composer<_$AppDatabase, $FavoriteFoodsTable> {
+  $$FavoriteFoodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get calories => $composableBuilder(
+      column: $table.calories, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get proteinG => $composableBuilder(
+      column: $table.proteinG, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get carbsG => $composableBuilder(
+      column: $table.carbsG, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get fatG => $composableBuilder(
+      column: $table.fatG, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get servingDescription => $composableBuilder(
+      column: $table.servingDescription,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$FavoriteFoodsTableOrderingComposer
+    extends Composer<_$AppDatabase, $FavoriteFoodsTable> {
+  $$FavoriteFoodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get calories => $composableBuilder(
+      column: $table.calories, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get proteinG => $composableBuilder(
+      column: $table.proteinG, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get carbsG => $composableBuilder(
+      column: $table.carbsG, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get fatG => $composableBuilder(
+      column: $table.fatG, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get servingDescription => $composableBuilder(
+      column: $table.servingDescription,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$FavoriteFoodsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FavoriteFoodsTable> {
+  $$FavoriteFoodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get calories =>
+      $composableBuilder(column: $table.calories, builder: (column) => column);
+
+  GeneratedColumn<double> get proteinG =>
+      $composableBuilder(column: $table.proteinG, builder: (column) => column);
+
+  GeneratedColumn<double> get carbsG =>
+      $composableBuilder(column: $table.carbsG, builder: (column) => column);
+
+  GeneratedColumn<double> get fatG =>
+      $composableBuilder(column: $table.fatG, builder: (column) => column);
+
+  GeneratedColumn<String> get servingDescription => $composableBuilder(
+      column: $table.servingDescription, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FavoriteFoodsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $FavoriteFoodsTable,
+    FavoriteFood,
+    $$FavoriteFoodsTableFilterComposer,
+    $$FavoriteFoodsTableOrderingComposer,
+    $$FavoriteFoodsTableAnnotationComposer,
+    $$FavoriteFoodsTableCreateCompanionBuilder,
+    $$FavoriteFoodsTableUpdateCompanionBuilder,
+    (
+      FavoriteFood,
+      BaseReferences<_$AppDatabase, $FavoriteFoodsTable, FavoriteFood>
+    ),
+    FavoriteFood,
+    PrefetchHooks Function()> {
+  $$FavoriteFoodsTableTableManager(_$AppDatabase db, $FavoriteFoodsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FavoriteFoodsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FavoriteFoodsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FavoriteFoodsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> calories = const Value.absent(),
+            Value<double?> proteinG = const Value.absent(),
+            Value<double?> carbsG = const Value.absent(),
+            Value<double?> fatG = const Value.absent(),
+            Value<String> servingDescription = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              FavoriteFoodsCompanion(
+            id: id,
+            name: name,
+            calories: calories,
+            proteinG: proteinG,
+            carbsG: carbsG,
+            fatG: fatG,
+            servingDescription: servingDescription,
+            source: source,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            required int calories,
+            Value<double?> proteinG = const Value.absent(),
+            Value<double?> carbsG = const Value.absent(),
+            Value<double?> fatG = const Value.absent(),
+            required String servingDescription,
+            required String source,
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              FavoriteFoodsCompanion.insert(
+            id: id,
+            name: name,
+            calories: calories,
+            proteinG: proteinG,
+            carbsG: carbsG,
+            fatG: fatG,
+            servingDescription: servingDescription,
+            source: source,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$FavoriteFoodsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $FavoriteFoodsTable,
+    FavoriteFood,
+    $$FavoriteFoodsTableFilterComposer,
+    $$FavoriteFoodsTableOrderingComposer,
+    $$FavoriteFoodsTableAnnotationComposer,
+    $$FavoriteFoodsTableCreateCompanionBuilder,
+    $$FavoriteFoodsTableUpdateCompanionBuilder,
+    (
+      FavoriteFood,
+      BaseReferences<_$AppDatabase, $FavoriteFoodsTable, FavoriteFood>
+    ),
+    FavoriteFood,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2395,4 +3083,6 @@ class $AppDatabaseManager {
       $$SleepNotesTableTableManager(_db, _db.sleepNotes);
   $$WaterLogsTableTableManager get waterLogs =>
       $$WaterLogsTableTableManager(_db, _db.waterLogs);
+  $$FavoriteFoodsTableTableManager get favoriteFoods =>
+      $$FavoriteFoodsTableTableManager(_db, _db.favoriteFoods);
 }

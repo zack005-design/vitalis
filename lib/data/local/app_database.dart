@@ -9,16 +9,17 @@ import 'tables/meals_table.dart';
 import 'tables/custom_foods_table.dart';
 import 'tables/sleep_notes_table.dart';
 import 'tables/water_logs_table.dart';
+import 'tables/favorite_foods_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Meals, CustomFoods, SleepNotes, WaterLogs])
+@DriftDatabase(tables: [Meals, CustomFoods, SleepNotes, WaterLogs, FavoriteFoods])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -51,6 +52,13 @@ class AppDatabase extends _$AppDatabase {
           }
           // Make noteText optional migration — recreate table safely
         }
+        if (from < 5) {
+          try {
+            await m.createTable(favoriteFoods);
+          } catch (e) {
+            debugPrint('Migration error (favoriteFoods): $e');
+          }
+        }
       },
     );
   }
@@ -80,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Map<String, dynamic>>> getDailyCaloriesForDateRange(DateTime start, DateTime end) async {
     final query = '''
-      SELECT strftime('%Y-%m-%d', timestamp/1000, 'unixepoch', 'localtime') AS date, SUM(calories) AS total 
+      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(calories) AS total 
       FROM meals 
       WHERE timestamp >= ? AND timestamp < ? 
       GROUP BY date
@@ -90,6 +98,26 @@ class AppDatabase extends _$AppDatabase {
       Variable.withDateTime(end)
     ]).get();
     return result.map((row) => row.data).toList();
+  }
+
+  Stream<List<Meal>> watchMealsForDateRange(DateTime start, DateTime end) {
+    return (select(meals)
+          ..where((tbl) => tbl.timestamp.isBiggerOrEqualValue(start))
+          ..where((tbl) => tbl.timestamp.isSmallerThanValue(end)))
+        .watch();
+  }
+
+  Stream<List<Map<String, dynamic>>> watchDailyCaloriesForDateRange(DateTime start, DateTime end) {
+    final query = '''
+      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(calories) AS total 
+      FROM meals 
+      WHERE timestamp >= ? AND timestamp < ? 
+      GROUP BY date
+    ''';
+    return customSelect(query, variables: [
+      Variable.withDateTime(start),
+      Variable.withDateTime(end)
+    ], readsFrom: {meals}).watch().map((rows) => rows.map((row) => row.data).toList());
   }
 
   // Water Log DAOs
@@ -116,7 +144,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Map<String, dynamic>>> getDailyWaterForDateRange(DateTime start, DateTime end) async {
     final query = '''
-      SELECT strftime('%Y-%m-%d', timestamp/1000, 'unixepoch', 'localtime') AS date, SUM(amount_ml) AS total 
+      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(amount_ml) AS total 
       FROM water_logs 
       WHERE timestamp >= ? AND timestamp < ? 
       GROUP BY date
@@ -126,6 +154,19 @@ class AppDatabase extends _$AppDatabase {
       Variable.withDateTime(end)
     ]).get();
     return result.map((row) => row.data).toList();
+  }
+
+  Stream<List<Map<String, dynamic>>> watchDailyWaterForDateRange(DateTime start, DateTime end) {
+    final query = '''
+      SELECT strftime('%Y-%m-%d', timestamp, 'unixepoch', 'localtime') AS date, SUM(amount_ml) AS total 
+      FROM water_logs 
+      WHERE timestamp >= ? AND timestamp < ? 
+      GROUP BY date
+    ''';
+    return customSelect(query, variables: [
+      Variable.withDateTime(start),
+      Variable.withDateTime(end)
+    ], readsFrom: {waterLogs}).watch().map((rows) => rows.map((row) => row.data).toList());
   }
 
   // Sleep Notes DAOs
@@ -149,6 +190,13 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  Stream<List<SleepNote>> watchSleepNotesForDateRange(DateTime start, DateTime end) {
+    return (select(sleepNotes)
+          ..where((tbl) => tbl.date.isBiggerOrEqualValue(start))
+          ..where((tbl) => tbl.date.isSmallerThanValue(end)))
+        .watch();
+  }
+
   Future<int> insertSleepNote(SleepNotesCompanion note) => into(sleepNotes).insert(note);
 
   // Custom Foods DAOs
@@ -167,6 +215,21 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> restoreMeal(Meal meal) => into(meals).insert(meal, mode: InsertMode.insertOrReplace);
   Future<void> restoreWaterLog(WaterLog log) => into(waterLogs).insert(log, mode: InsertMode.insertOrReplace);
+
+  // Favorite Foods DAOs
+  Stream<List<FavoriteFood>> watchFavoriteFoods() {
+    return (select(favoriteFoods)..orderBy([(tbl) => OrderingTerm.desc(tbl.createdAt)])).watch();
+  }
+
+  Future<List<FavoriteFood>> getAllFavoriteFoods() => select(favoriteFoods).get();
+
+  Future<int> insertFavoriteFood(FavoriteFoodsCompanion food) => into(favoriteFoods).insert(food);
+
+  Future<int> deleteFavoriteFood(String name) => (delete(favoriteFoods)..where((tbl) => tbl.name.equals(name))).go();
+
+  Future<FavoriteFood?> getFavoriteFoodByName(String name) {
+    return (select(favoriteFoods)..where((tbl) => tbl.name.equals(name))).getSingleOrNull();
+  }
 }
 
 LazyDatabase _openConnection() {

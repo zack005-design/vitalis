@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:health/health.dart';
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import '../local/app_database.dart';
 
 class HealthConnectClient {
@@ -48,7 +49,12 @@ class HealthConnectClient {
   /// Check if Health Connect is installed or prompt install
   Future<void> installHealthConnect() async {
     try {
-      await _health.installHealthConnect();
+      final uri = Uri.parse("market://details?id=com.google.android.apps.healthdata");
+      if (await url_launcher.canLaunchUrl(uri)) {
+        await url_launcher.launchUrl(uri, mode: url_launcher.LaunchMode.externalApplication);
+      } else {
+        await _health.installHealthConnect();
+      }
     } catch (e, st) {
       debugPrint('HealthConnect error (installHealthConnect): $e\n$st');
       rethrow;

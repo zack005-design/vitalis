@@ -36,22 +36,23 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
 
     return AppScaffold(
       title: "Metabolic Insights",
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: SizedBox(
-            width: 150,
-            child: SegmentedControl<String>(
-              options: const {'7d': '7D', '30d': '30D', '90d': '90D'},
-              selectedValue: _selectedRange,
-              onValueChanged: (val) => setState(() => _selectedRange = val),
-            ),
-          ),
-        ),
-      ],
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 150,
+                child: SegmentedControl<String>(
+                  options: const {'7d': '7D', '30d': '30D', '90d': '90D'},
+                  selectedValue: _selectedRange,
+                  onValueChanged: (val) => setState(() => _selectedRange = val),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           // Caloric Intake Card (Stitch Spec)
           calorieDataAsync.when(
             loading: () => const SizedBox(height: 220, child: Center(child: CircularProgressIndicator())),
@@ -146,6 +147,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
+                                reservedSize: 32,
                                 getTitlesWidget: (value, meta) {
                                   final idx = value.toInt();
                                   if (idx >= 0 && idx < calories.length) {
@@ -255,6 +257,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                         width: _days > 7 ? _days * 30.0 : MediaQuery.of(context).size.width - 80,
                         child: LineChart(
                         LineChartData(
+                          clipData: const FlClipData.all(),
                           maxY: maxVal == 0 ? 100 : maxVal,
                           borderData: FlBorderData(show: false),
                           gridData: FlGridData(
@@ -273,6 +276,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
+                                reservedSize: 32,
                                 getTitlesWidget: (value, meta) {
                                   final idx = value.toInt();
                                   if (idx >= 0 && idx < macros.length) {
@@ -384,6 +388,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                         width: _days > 7 ? _days * 30.0 : MediaQuery.of(context).size.width - 80,
                         child: LineChart(
                         LineChartData(
+                          clipData: const FlClipData.all(),
                           maxY: maxVal,
                           borderData: FlBorderData(show: false),
                           gridData: FlGridData(
@@ -402,6 +407,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
+                                reservedSize: 32,
                                 getTitlesWidget: (value, meta) {
                                   final idx = value.toInt();
                                   if (idx >= 0 && idx < water.length) {
@@ -555,6 +561,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
+                                reservedSize: 32,
                                 getTitlesWidget: (value, meta) {
                                   final idx = value.toInt();
                                   if (idx >= 0 && idx < sleepHours.length) {
@@ -681,11 +688,18 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   }
 
   String _dayLabel(int index, int total) {
+    final now = DateTime.now();
+    final date = now.subtract(Duration(days: total - 1 - index));
     if (total <= 7) {
       const days = ["M", "T", "W", "T", "F", "S", "S"];
-      return days[index % 7];
+      return days[date.weekday - 1];
+    } else if (total <= 30) {
+      if (index % 5 == 0) return "${date.day}/${date.month}";
+      return "";
+    } else {
+      if (index % 15 == 0) return "${date.day}/${date.month}";
+      return "";
     }
-    return "${index + 1}";
   }
 
   Widget _macroLegend(bool isDark, String label, Color color) {

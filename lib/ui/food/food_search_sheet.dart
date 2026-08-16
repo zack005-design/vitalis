@@ -15,13 +15,14 @@ import 'add_custom_food_sheet.dart';
 import 'dart:async';
 
 class FoodSearchSheet extends ConsumerStatefulWidget {
-  const FoodSearchSheet({super.key});
+  final String initialCategory;
+  const FoodSearchSheet({super.key, this.initialCategory = 'All'});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context, {String initialCategory = 'All'}) {
     return BottomSheetModal.show(
       context: context,
       title: "Log Food",
-      child: const FoodSearchSheet(),
+      child: FoodSearchSheet(initialCategory: initialCategory),
     );
   }
 
@@ -31,8 +32,14 @@ class FoodSearchSheet extends ConsumerStatefulWidget {
 
 class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
   final _searchController = TextEditingController();
-  String _selectedCategory = 'All';
+  late String _selectedCategory;
   Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory;
+  }
 
   @override
   void dispose() {
@@ -308,6 +315,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
         SnackBar(
           content: Text('Logged "${item.name}" (${(item.calories * servings).round()} kcal)'),
           behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
         ),
       );
     }
@@ -317,12 +325,17 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final searchResultsAsync = ref.watch(foodSearchResultsProvider);
+    final favoriteFoodsAsync = ref.watch(favoriteFoodsProvider);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Search TextField
+    // Extract list of favorite names for quick lookup
+    final favoriteNames = favoriteFoodsAsync.valueOrNull?.map((f) => f.name).toSet() ?? {};
+
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search TextField
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
@@ -371,12 +384,16 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
         ),
         const SizedBox(height: 12),
 
-        // Filter Category Chips (All, South Indian, Custom, Packaged)
+        // Filter Category Chips (All, Recent, Favorites, South Indian, Custom, Packaged)
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               _filterChip("All", isDark),
+              const SizedBox(width: 8),
+              _filterChip("Recent", isDark),
+              const SizedBox(width: 8),
+              _filterChip("Favorites", isDark),
               const SizedBox(width: 8),
               _filterChip("South Indian", isDark),
               const SizedBox(width: 8),
@@ -417,15 +434,17 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
         const SizedBox(height: 8),
 
         // Search Results List
-        SizedBox(
-          height: 340,
-          child: searchResultsAsync.when(
+        searchResultsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => Center(child: Text("Error: $err")),
             data: (results) {
               // Apply category filter
               final filtered = results.where((item) {
-                if (_selectedCategory == "South Indian") {
+                if (_selectedCategory == "Recent") {
+                  return item.source == FoodSearchSource.history;
+                } else if (_selectedCategory == "Favorites") {
+                  return item.source == FoodSearchSource.favorite;
+                } else if (_selectedCategory == "South Indian") {
                   return item.source == FoodSearchSource.indbLocal;
                 } else if (_selectedCategory == "Custom") {
                   return item.source == FoodSearchSource.custom;
@@ -449,10 +468,14 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
               }
 
               return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: filtered.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final item = filtered[index];
+                  final isFavorite = favoriteNames.contains(item.name);
+
                   return GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     onTap: () => _showServingPicker(item),
@@ -488,6 +511,31 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                             color: AppColors.calorieAccent,
                           ),
                         ),
+                        IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+                            color: isFavorite ? Colors.amber : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                          ),
+                          onPressed: () async {
+                            HapticFeedback.selectionClick();
+                            final db = ref.read(appDatabaseProvider);
+                            if (isFavorite) {
+                              await db.deleteFavoriteFood(item.name);
+                            } else {
+                              await db.insertFavoriteFood(
+                                FavoriteFoodsCompanion(
+                                  name: drift.Value(item.name),
+                                  calories: drift.Value(item.calories),
+                                  proteinG: drift.Value(item.proteinG),
+                                  carbsG: drift.Value(item.carbsG),
+                                  fatG: drift.Value(item.fatG),
+                                  servingDescription: drift.Value(item.servingDescription),
+                                  source: drift.Value(item.source.name),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       ],
                     ),
                   );
@@ -495,8 +543,8 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -552,6 +600,10 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
       case FoodSearchSource.history:
         label = "Recent";
         color = AppColors.scoreAccent;
+        break;
+      case FoodSearchSource.favorite:
+        label = "Favorite";
+        color = Colors.amber;
         break;
       case FoodSearchSource.custom:
         label = "Custom";

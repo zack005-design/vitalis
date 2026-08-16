@@ -57,19 +57,22 @@ class AppButton extends StatelessWidget {
         ),
       );
     } else {
-      childWidget = Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 20, color: fg),
-            const SizedBox(width: 8),
+      childWidget = FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 20, color: fg),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: AppTypography.buttonLabel(isDark).copyWith(color: fg),
+            ),
           ],
-          Text(
-            label,
-            style: AppTypography.buttonLabel(isDark).copyWith(color: fg),
-          ),
-        ],
+        ),
       );
     }
 

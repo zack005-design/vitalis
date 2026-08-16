@@ -1,4 +1,4 @@
-import 'dart:io' as dart_io;
+import 'dart:math' as math;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +11,7 @@ import '../design_system/app_scaffold.dart';
 import '../design_system/app_typography.dart';
 import '../design_system/glass_container.dart';
 import '../../domain/profile/profile_provider.dart';
+import '../../data/debug/demo_data_injector.dart';
 import 'edit_profile_sheet.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
@@ -40,6 +41,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           SnackBar(
             content: Text('Backup exported successfully to ${file.path.split('/').last}'),
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
           ),
         );
       }
@@ -62,13 +64,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
   Future<void> _importData() async {
-    // Let the user pick a JSON backup file
-    FilePickerResult? result;
+    // Let the user pick a JSON backup file (file_picker v12 single-file API)
+    PlatformFile? picked;
     try {
-      result = await FilePicker.platform.pickFiles(
+      picked = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['json'],
-        allowMultiple: false,
       );
     } catch (e) {
       if (mounted) {
@@ -79,18 +80,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       return;
     }
 
-    if (result == null || result.files.isEmpty) {
+    if (picked == null) {
       // User cancelled the picker — do nothing
-      return;
-    }
-
-    final filePath = result.files.single.path;
-    if (filePath == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not read the selected file path.')),
-        );
-      }
       return;
     }
 
@@ -104,8 +95,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     }
 
     try {
-      final file = dart_io.File(filePath);
-      final jsonString = await file.readAsString();
+      final bytes = await picked.readAsBytes();
+      final jsonString = String.fromCharCodes(bytes);
       final db = ref.read(appDatabaseProvider);
       final backupService = JsonBackupService(db: db);
       final importedCount = await backupService.importFromJson(jsonString);
@@ -116,6 +107,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           SnackBar(
             content: Text('Successfully restored $importedCount records from backup.'),
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
           ),
         );
       }
@@ -126,6 +118,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           SnackBar(
             content: Text('Invalid backup file format: ${e.message}'),
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
           ),
         );
       }
@@ -136,6 +129,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           SnackBar(
             content: Text('Restore failed: $e'),
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
           ),
         );
       }
@@ -176,6 +170,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   const SnackBar(
                     content: Text('Local database cleared successfully.'),
                     behavior: SnackBarBehavior.floating,
+                    margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
                   ),
                 );
               }
@@ -185,6 +180,134 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         ],
       ),
     );
+  }
+
+  void _showDemoDataActionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF131B2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  "Inject Demo Data",
+                  style: AppTypography.headline(isDark),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Choose how many days of randomized data to inject.",
+                  style: AppTypography.bodyMd(isDark),
+                ),
+                const SizedBox(height: 24),
+                ListTile(
+                  leading: const Icon(Icons.calendar_view_week_rounded),
+                  title: const Text("7 Days"),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _injectDemoData(7);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.calendar_month_rounded),
+                  title: const Text("30 Days"),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _injectDemoData(30);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.calendar_view_month_rounded),
+                  title: const Text("90 Days"),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _injectDemoData(90);
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _injectDemoData(int days) async {
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+    try {
+      final db = ref.read(appDatabaseProvider);
+      final injector = DemoDataInjector(db);
+      await injector.injectData(days);
+      
+      // Update UserProfile
+      final random = math.Random();
+      final names = ['Alex Johnson', 'Sam Smith', 'Jordan Lee', 'Taylor Doe', 'Riley Chen'];
+      final randomName = names[random.nextInt(names.length)];
+      final randomAge = 20 + random.nextInt(40);
+      final randomHeight = 150.0 + random.nextInt(50);
+      final randomWeight = 50.0 + random.nextInt(50);
+      final randomSex = random.nextBool() ? 'Male' : 'Female';
+      final activities = ['Sedentary', 'Light', 'Moderate', 'Active', 'Very Active'];
+      final randomActivity = activities[random.nextInt(activities.length)];
+
+      await ref.read(userProfileProvider.notifier).updateProfile(
+        name: randomName,
+        age: randomAge,
+        height: randomHeight,
+        weight: randomWeight,
+        sex: randomSex,
+        activityLevel: randomActivity,
+      );
+
+      // Update Targets
+      final randomCalorieTarget = 1500 + random.nextInt(1000);
+      await ref.read(calorieTargetProvider.notifier).setTarget(randomCalorieTarget);
+
+      final randomWaterTarget = 1500 + (random.nextInt(6) * 250);
+      await ref.read(waterTargetProvider.notifier).setTarget(randomWaterTarget);
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully injected $days days of demo data.'),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to inject data: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -352,6 +475,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                         const SnackBar(
                           content: Text('Connected to Google Health Connect! Two-way sync complete.'),
                           behavior: SnackBarBehavior.floating,
+                          margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
                         ),
                       );
                     } else {
@@ -360,6 +484,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                         const SnackBar(
                           content: Text('Please grant Health Connect permissions in Android Settings.'),
                           behavior: SnackBarBehavior.floating,
+                          margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
                         ),
                       );
                     }
@@ -452,6 +577,35 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           ),
           const SizedBox(height: 24),
 
+          Text(
+            "Developer / Testing",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          GlassContainer(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                _buildSettingsTile(
+                  isDark: isDark,
+                  icon: Icons.science_rounded,
+                  iconBg: const Color(0xFFFF5722),
+                  title: "Inject Demo Data",
+                  subtitle: "Add randomized meals, water, and sleep",
+                  onTap: () {
+                    _showDemoDataActionSheet(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // Local-First Privacy Reassurance Card
           GlassContainer(
             padding: const EdgeInsets.all(16),
@@ -506,7 +660,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               icon: Icons.info_outline_rounded,
               iconBg: const Color(0xFF607D8B),
               title: "About",
-              subtitle: "Vitality Tracker v1.0.0",
+              subtitle: "Vitality Tracker v1.2.0",
               onTap: () {},
             ),
           ),

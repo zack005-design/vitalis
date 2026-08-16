@@ -44,23 +44,23 @@ class _SleepScreenState extends ConsumerState<SleepScreen> {
     final barData = logs.take(_limit).toList().reversed.toList();
 
     return AppScaffold(
-      title: "Sleep",
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: SizedBox(
-            width: 120,
-            child: SegmentedControl<String>(
-              options: const {'7d': '7d', '30d': '30d'},
-              selectedValue: _selectedRange,
-              onValueChanged: (val) => setState(() => _selectedRange = val),
-            ),
-          ),
-        ),
-      ],
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 120,
+                child: SegmentedControl<String>(
+                  options: const {'7d': '7d', '30d': '30d'},
+                  selectedValue: _selectedRange,
+                  onValueChanged: (val) => setState(() => _selectedRange = val),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
           // Sleep Duration Hero Header (Stitch Mockup)
           Center(
             child: Column(

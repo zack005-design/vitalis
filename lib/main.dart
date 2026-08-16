@@ -5,8 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'domain/shared_preferences_provider.dart';
 import 'services/notification_service.dart';
-import 'ui/design_system/app_colors.dart';
-import 'ui/main_navigation_shell.dart';
+import 'ui_v2/design_system/app_colors.dart';
+
+import 'ui_v2/splash/splash_screen.dart';
 
 Future<void> main() async {
   runZonedGuarded(() async {
@@ -97,7 +98,7 @@ class CalorieSleepTrackerApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MainNavigationShell(),
+      home: const SplashScreen(),
     );
   }
 }
