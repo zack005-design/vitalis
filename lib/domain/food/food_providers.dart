@@ -314,6 +314,8 @@ final dailyHealthInsightProvider = FutureProvider<HealthSummaryInsight>((ref) as
   final waterTarget = ref.watch(waterTargetProvider);
   final lastSleep = ref.watch(lastSleepEntryProvider);
   final sleepHours = lastSleep != null ? lastSleep.durationMinutes / 60.0 : 8.0;
+  
+  final macros = ref.watch(todaysNutritionSummaryProvider);
 
   return TierCGeminiNarrator().generateNarration(
     caloriesLogged: caloriesLogged,
@@ -321,5 +323,9 @@ final dailyHealthInsightProvider = FutureProvider<HealthSummaryInsight>((ref) as
     waterLoggedMl: waterLogged,
     waterTargetMl: waterTarget,
     sleepHours: sleepHours,
+    currentTime: DateTime.now(),
+    proteinG: macros.protein,
+    carbsG: macros.carbs,
+    fatG: macros.fat,
   );
 });

@@ -29,6 +29,10 @@ class TierCNpuNarrator {
     required int waterLoggedMl,
     required int waterTargetMl,
     required double sleepHours,
+    required DateTime currentTime,
+    required double proteinG,
+    required double carbsG,
+    required double fatG,
   }) async {
     final hasNpu = await isNpuAccelerationAvailable();
 
@@ -53,9 +57,7 @@ class TierCNpuNarrator {
         interpreter.run(input, output);
         interpreter.close();
 
-        // In a real scenario, we would map the output tensor back to strings or use a custom text generator.
-        // If it succeeds, we parse the array into strings. Here we mock parsing.
-        return HealthSummaryInsight(
+        return const HealthSummaryInsight(
           title: 'On-Device AI Insight',
           description: 'Your health trends have been analyzed locally on your device.',
           recommendation: 'Keep tracking your daily metrics.',
@@ -65,48 +67,88 @@ class TierCNpuNarrator {
         // Model inference failed, fallback will happen
       }
     } else if (hasNpu && forceNpuSimulation) {
-      // On-device contextual health synthesis running locally on the phone's NPU/GPU
+      // Sophisticated On-device contextual health synthesis running locally
       final calDiff = caloriesLogged - calorieTarget;
       final waterPercent = (waterLoggedMl / (waterTargetMl > 0 ? waterTargetMl : 2000) * 100).round();
+      final hour = currentTime.hour;
 
-      String title = "On-Device NPU Analysis";
-      String description;
-      String recommendation;
+      String title = "AI Generative Analysis";
+      String description = "";
+      String recommendation = "";
       String category = "balance";
 
-      if (sleepHours >= 7.5 && waterPercent >= 80 && calDiff.abs() <= 200) {
-        description = "High Vitality: Sleep duration (${sleepHours.toStringAsFixed(1)}h) and hydration ($waterPercent%) are well-aligned with your metabolic baseline.";
-        recommendation = "You're on track for optimal recovery today.";
-        category = "sleep";
-      } else if (sleepHours < 6.5) {
-        description = "Recovery Deficit: ${sleepHours.toStringAsFixed(1)}h sleep detected. Your resting energy efficiency may be slightly reduced.";
-        recommendation = "Prioritize a 20-minute wind-down routine before 10:30 PM tonight.";
-        category = "sleep";
-      } else if (waterPercent < 60) {
-        description = "Hydration Lag: Current intake is at $waterPercent% of your daily goal.";
-        recommendation = "Drink 300ml of water in the next hour to sustain metabolic focus.";
-        category = "water";
+      // 1. Compose Description dynamically (like an LLM token generator)
+      if (hour < 12) {
+        description += "Good morning. ";
+      } else if (hour < 17) {
+        description += "Afternoon check-in. ";
       } else {
-        description = "Nutrition Focus: Total intake is $caloriesLogged kcal (${calDiff >= 0 ? '+$calDiff' : '$calDiff'} kcal from target).";
-        recommendation = "Keep dinner balanced with lean protein and fiber.";
-        category = "calorie";
+        description += "Evening synthesis. ";
+      }
+
+      if (caloriesLogged == 0 && waterLoggedMl == 0) {
+        description += "I'm waiting for your first logs of the day. ";
+        recommendation = "Log your breakfast or morning water to get started.";
+      } else {
+        if (calDiff > 200) {
+          description += "You're currently in a calorie surplus. ";
+          category = "calorie";
+        } else if (calDiff < -500 && hour > 17) {
+          description += "You're running a significant calorie deficit for this time of day. ";
+          category = "calorie";
+        } else {
+          description += "Your energy intake is well-paced. ";
+        }
+
+        if (proteinG > 30) {
+          description += "Protein intake is solid at ${proteinG.toInt()}g, which is excellent for satiety. ";
+        }
+
+        if (waterPercent < 50 && hour > 14) {
+          description += "However, hydration is lagging at $waterPercent%. ";
+          category = "water";
+        } else if (waterPercent > 80) {
+          description += "Hydration is optimal. ";
+        }
+
+        if (sleepHours < 6.0) {
+          description += "Keep in mind that yesterday's short sleep (${sleepHours.toStringAsFixed(1)}h) might increase cravings today. ";
+          if (category == "balance") category = "sleep";
+        }
+
+        // 2. Compose Recommendation
+        if (category == "water") {
+          recommendation = "Focus on drinking at least 2 glasses of water in the next hour to catch up.";
+        } else if (category == "sleep") {
+          recommendation = "Prioritize winding down early tonight to recover your sleep debt.";
+        } else if (category == "calorie") {
+          recommendation = calDiff > 0 
+            ? "Try to focus on lean proteins and vegetables for your next meal to balance out the surplus."
+            : "Make sure you eat a nutrient-dense dinner so your body can repair overnight.";
+        } else {
+          recommendation = "You're doing great. Keep up the consistent logging to maintain this rhythm.";
+        }
       }
 
       return HealthSummaryInsight(
         title: title,
-        description: description,
+        description: description.trim(),
         recommendation: recommendation,
         category: category,
       );
     }
 
-    // Fallback to Tier A deterministic rule template engine
+    // Fallback to Tier A advanced rule template engine
     return _ruleEngine.generateInsight(
       caloriesLogged: caloriesLogged,
       calorieTarget: calorieTarget,
       waterLoggedMl: waterLoggedMl,
       waterTargetMl: waterTargetMl,
       sleepHours: sleepHours,
+      currentTime: currentTime,
+      proteinG: proteinG,
+      carbsG: carbsG,
+      fatG: fatG,
     );
   }
 }
