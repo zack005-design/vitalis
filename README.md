@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/icon/app_icon.png" alt="Vitalis App Icon" width="150" height="150" />
+
 <br/>
 
 # 🌿 Vitalis
