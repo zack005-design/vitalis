@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:drift/drift.dart' as drift;
+import '../../data/health/health_connect_client.dart';
 import '../../data/local/app_database.dart';
 import '../../domain/food/food_providers.dart'; // contains appDatabaseProvider
 import '../../domain/sleep/active_sleep_provider.dart';
@@ -65,6 +66,7 @@ class _ActiveSleepTrackerScreenState extends ConsumerState<ActiveSleepTrackerScr
   Future<void> _endSleepSession() async {
     final tracker = ref.read(activeSleepTrackerProvider);
     final totalMinutes = tracker.elapsed.inMinutes;
+    final minutesToSave = totalMinutes > 0 ? totalMinutes : 1;
 
     setState(() => _isSaving = true);
     tracker.stop();
@@ -75,19 +77,20 @@ class _ActiveSleepTrackerScreenState extends ConsumerState<ActiveSleepTrackerScr
       final bed = tracker.startTime ?? DateTime.now();
       final wake = DateTime.now();
 
-      if (totalMinutes > 0) {
-        await db.insertSleepNote(
-          SleepNotesCompanion(
-            date: drift.Value(wake),
-            bedtime: drift.Value(bed),
-            wakeTime: drift.Value(wake),
-            durationMinutes: drift.Value(totalMinutes),
-            noteText: drift.Value(
-                "Active Sensor Tracking\nDeep: ${tracker.deepSleepMinutes}m\nLight: ${tracker.lightSleepMinutes}m\nAwake: ${tracker.awakeMinutes}m"),
-            createdAt: drift.Value(DateTime.now()),
-          ),
-        );
-      }
+      await db.insertSleepNote(
+        SleepNotesCompanion(
+          date: drift.Value(wake),
+          bedtime: drift.Value(bed),
+          wakeTime: drift.Value(wake),
+          durationMinutes: drift.Value(minutesToSave),
+          noteText: drift.Value(
+              "Active Sensor Tracking (${minutesToSave}m)\nDeep: ${tracker.deepSleepMinutes}m\nLight: ${tracker.lightSleepMinutes}m\nAwake: ${tracker.awakeMinutes}m"),
+          createdAt: drift.Value(DateTime.now()),
+        ),
+      );
+
+      // Background sync to Health Connect
+      HealthConnectClient().writeSleepSession(start: bed, end: wake).ignore();
     } catch (e) {
       debugPrint("Failed to save active sleep: $e");
     }
@@ -95,6 +98,13 @@ class _ActiveSleepTrackerScreenState extends ConsumerState<ActiveSleepTrackerScr
     tracker.reset();
     if (mounted) {
       Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sleep session saved (${minutesToSave}m)!'),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+        ),
+      );
     }
   }
 
@@ -195,7 +205,7 @@ class _ActiveSleepTrackerScreenState extends ConsumerState<ActiveSleepTrackerScr
             ),
           ),
 
-          const Spacer(),
+          const SizedBox(height: 60),
 
           // Instructions
           Padding(
@@ -212,7 +222,7 @@ class _ActiveSleepTrackerScreenState extends ConsumerState<ActiveSleepTrackerScr
           _isSaving 
             ? const Center(child: CircularProgressIndicator())
             : AppButton(
-                label: "Hold to Wake Up",
+                label: "Wake Up & Save Sleep",
                 icon: Icons.sunny,
                 onPressed: _endSleepSession,
               ),

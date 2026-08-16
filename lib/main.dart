@@ -5,9 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'domain/shared_preferences_provider.dart';
 import 'services/notification_service.dart';
-import 'ui_v2/design_system/app_colors.dart';
-
-import 'ui_v2/splash/splash_screen.dart';
+import 'ui/design_system/app_colors.dart';
+import 'ui/main_navigation_shell.dart';
 
 Future<void> main() async {
   runZonedGuarded(() async {
@@ -55,7 +54,7 @@ class CalorieSleepTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tracker',
+      title: 'Vitalis',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system, // Auto toggle based on OS Dark/Light mode
       theme: ThemeData(
@@ -98,7 +97,7 @@ class CalorieSleepTrackerApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const SplashScreen(),
+      home: const MainNavigationShell(),
     );
   }
 }

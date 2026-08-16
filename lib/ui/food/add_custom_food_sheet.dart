@@ -104,6 +104,8 @@ class _AddCustomFoodSheetState extends ConsumerState<AddCustomFoodSheet> {
         ),
       );
 
+      ref.invalidate(foodSearchResultsProvider);
+
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(

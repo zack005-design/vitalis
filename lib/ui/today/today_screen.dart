@@ -467,6 +467,162 @@ class TodayScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          // AI Vitality Insight Card
+          ref.watch(dailyHealthInsightProvider).when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (insight) {
+              Color categoryColor;
+              IconData categoryIcon;
+              switch (insight.category) {
+                case 'calorie':
+                  categoryColor = AppColors.calorieAccent;
+                  categoryIcon = Icons.local_fire_department_rounded;
+                  break;
+                case 'water':
+                  categoryColor = AppColors.waterAccent;
+                  categoryIcon = Icons.water_drop_rounded;
+                  break;
+                case 'sleep':
+                  categoryColor = AppColors.sleepAccent;
+                  categoryIcon = Icons.nightlight_round;
+                  break;
+                default:
+                  categoryColor = AppColors.primaryBlue;
+                  categoryIcon = Icons.spa_rounded;
+              }
+
+              return Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF151B2B) : const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: categoryColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: categoryColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      categoryColor.withValues(alpha: isDark ? 0.12 : 0.08),
+                      isDark ? const Color(0xFF131B2E).withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [categoryColor, categoryColor.withValues(alpha: 0.7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: categoryColor.withValues(alpha: 0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                          ),
+                          child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "AI VITALITY COACH",
+                                style: TextStyle(
+                                  fontFamily: AppTypography.jetBrainsMonoFontFamily,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                  color: categoryColor,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                insight.title,
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(categoryIcon, color: categoryColor.withValues(alpha: 0.5), size: 24),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      insight.description,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.5,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: categoryColor.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Icon(Icons.tips_and_updates_rounded, size: 18, color: categoryColor),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              insight.recommendation,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                height: 1.45,
+                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 24),
 
           // Today's Meals Header

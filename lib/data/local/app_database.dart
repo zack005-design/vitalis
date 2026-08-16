@@ -208,6 +208,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> insertCustomFood(CustomFoodsCompanion food) => into(customFoods).insert(food);
 
+  Future<int> deleteCustomFoodByName(String name) => (delete(customFoods)..where((tbl) => tbl.name.equals(name))).go();
+
   Future<List<CustomFood>> searchCustomFoods(String query) {
     final cleanQuery = '%${query.trim().toLowerCase()}%';
     return (select(customFoods)..where((tbl) => tbl.name.like(cleanQuery))).get();

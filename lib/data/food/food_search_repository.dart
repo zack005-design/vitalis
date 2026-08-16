@@ -102,15 +102,17 @@ class FoodSearchRepository {
     // Step 2: Bundled INDB Dataset (South Indian / Kerala)
     final indbItems = await _indbLoader.searchLocalDataset(query);
     for (final item in indbItems) {
-      results.add(FoodSearchResult(
-        name: item.name,
-        calories: item.calories,
-        proteinG: item.proteinG,
-        carbsG: item.carbsG,
-        fatG: item.fatG,
-        servingDescription: item.servingDescription,
-        source: FoodSearchSource.indbLocal,
-      ));
+      if (seen.add(item.name)) {
+        results.add(FoodSearchResult(
+          name: item.name,
+          calories: item.calories,
+          proteinG: item.proteinG,
+          carbsG: item.carbsG,
+          fatG: item.fatG,
+          servingDescription: item.servingDescription,
+          source: FoodSearchSource.indbLocal,
+        ));
+      }
     }
 
     // Step 3: Open Food Facts API (if query is non-empty)

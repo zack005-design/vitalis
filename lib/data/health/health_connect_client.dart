@@ -61,11 +61,11 @@ class HealthConnectClient {
     }
   }
 
-  /// Fetch last night's sleep sessions
+  /// Fetch last night's sleep sessions (queries last 48 hours to reliably catch overnight sessions)
   Future<List<HealthDataPoint>> fetchSleepSessions(DateTime now) async {
     try {
       await _ensureConfigured();
-      final start = now.subtract(const Duration(hours: 24));
+      final start = now.subtract(const Duration(hours: 48));
       final points = await _health.getHealthDataFromTypes(
         startTime: start,
         endTime: now,

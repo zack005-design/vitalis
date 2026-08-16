@@ -109,12 +109,16 @@ final totalWaterMlTodayProvider = Provider<int>((ref) {
 // Food Search Query State Provider
 final foodSearchQueryProvider = StateProvider<String>((ref) => '');
 
-// Food Search Results Provider — 300ms debounce prevents a query per keystroke
+// Food Search Results Provider — returns full local library when query is empty, and debounces keystrokes when typing
 final foodSearchResultsProvider = FutureProvider<List<FoodSearchResult>>((ref) async {
   final query = ref.watch(foodSearchQueryProvider);
-  if (query.trim().isEmpty) return const [];
+  final repo = ref.read(foodSearchRepositoryProvider);
 
-  // Debounce: wait 300ms after the last keystroke before firing the search
+  if (query.trim().isEmpty) {
+    return repo.search('');
+  }
+
+  // Debounce: wait 300ms after the last keystroke before firing remote search
   final completer = Completer<void>();
   final timer = Timer(const Duration(milliseconds: 300), completer.complete);
   ref.onDispose(() {
@@ -123,8 +127,6 @@ final foodSearchResultsProvider = FutureProvider<List<FoodSearchResult>>((ref) a
   });
   await completer.future;
 
-  // Re-check if the provider was disposed/rebuilt during the debounce window
-  final repo = ref.read(foodSearchRepositoryProvider);
   return repo.search(query);
 });
 

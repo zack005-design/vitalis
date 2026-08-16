@@ -435,7 +435,10 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
 
         // Search Results List
         searchResultsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator()),
+            ),
             error: (err, _) => Center(child: Text("Error: $err")),
             data: (results) {
               // Apply category filter
@@ -443,7 +446,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                 if (_selectedCategory == "Recent") {
                   return item.source == FoodSearchSource.history;
                 } else if (_selectedCategory == "Favorites") {
-                  return item.source == FoodSearchSource.favorite;
+                  return item.source == FoodSearchSource.favorite || favoriteNames.contains(item.name);
                 } else if (_selectedCategory == "South Indian") {
                   return item.source == FoodSearchSource.indbLocal;
                 } else if (_selectedCategory == "Custom") {
@@ -455,14 +458,62 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
               }).toList();
 
               if (filtered.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.search_off_rounded, size: 40, color: AppColors.darkTextMuted),
-                      const SizedBox(height: 8),
-                      Text("No food items found", style: AppTypography.bodyMd(isDark)),
-                    ],
+                String emptyTitle;
+                String emptySubtitle;
+                IconData emptyIcon;
+
+                switch (_selectedCategory) {
+                  case "Favorites":
+                    emptyIcon = Icons.star_border_rounded;
+                    emptyTitle = "No favorite foods yet";
+                    emptySubtitle = "Tap the star icon on any food item to add it to your favorites.";
+                    break;
+                  case "Recent":
+                    emptyIcon = Icons.history_rounded;
+                    emptyTitle = "No recent meals logged";
+                    emptySubtitle = "Log meals from the search library to see your history here.";
+                    break;
+                  case "Custom":
+                    emptyIcon = Icons.add_circle_outline_rounded;
+                    emptyTitle = "No custom dishes";
+                    emptySubtitle = "Tap '+ Custom Dish' above to create and save your own recipes.";
+                    break;
+                  case "South Indian":
+                    emptyIcon = Icons.restaurant_rounded;
+                    emptyTitle = "No South Indian dishes found";
+                    emptySubtitle = "Try searching for dishes like Dosa, Idli, Sambar, or Kerala Fish Curry.";
+                    break;
+                  default:
+                    emptyIcon = Icons.search_off_rounded;
+                    emptyTitle = "No food items found";
+                    emptySubtitle = "Try searching for a different dish or create a Custom Dish.";
+                    break;
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(emptyIcon, size: 44, color: AppColors.darkTextMuted),
+                        const SizedBox(height: 12),
+                        Text(
+                          emptyTitle,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          emptySubtitle,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.footnote(isDark),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }
@@ -476,7 +527,7 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                   final item = filtered[index];
                   final isFavorite = favoriteNames.contains(item.name);
 
-                  return GlassContainer(
+                  Widget tile = GlassContainer(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     onTap: () => _showServingPicker(item),
                     child: Row(
@@ -534,11 +585,45 @@ class _FoodSearchSheetState extends ConsumerState<FoodSearchSheet> {
                                 ),
                               );
                             }
+                            ref.invalidate(foodSearchResultsProvider);
                           },
                         ),
                       ],
                     ),
                   );
+
+                  if (item.source == FoodSearchSource.custom) {
+                    tile = Dismissible(
+                      key: ValueKey('custom_${item.name}'),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                      ),
+                      onDismissed: (direction) async {
+                        final db = ref.read(appDatabaseProvider);
+                        await db.deleteCustomFoodByName(item.name);
+                        ref.invalidate(foodSearchResultsProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Deleted "${item.name}"'),
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+                            ),
+                          );
+                        }
+                      },
+                      child: tile,
+                    );
+                  }
+
+                  return tile;
                 },
               );
             },

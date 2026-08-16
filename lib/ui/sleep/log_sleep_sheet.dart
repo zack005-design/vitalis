@@ -169,9 +169,6 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
     setState(() => _isSaving = true);
     try {
       final client = HealthConnectClient();
-      try {
-        await client.installHealthConnect();
-      } catch (_) {}
       
       final hasPerms = await client.requestPermissions();
       if (!hasPerms) {
@@ -187,7 +184,7 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
       if (sessions.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No recent sleep sessions found')),
+            const SnackBar(content: Text('No recent sleep sessions found in Health Connect')),
           );
         }
         return;
@@ -202,13 +199,17 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
           _noteController.text = "Auto-filled from Health Connect";
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Auto-filled from Health Connect')),
+          SnackBar(
+            content: Text(
+              'Auto-filled sleep: ${_bedtime.format(context)} – ${_wakeTime.format(context)}',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Auto-fill failed: $e')),
+          SnackBar(content: Text('Health Connect sync failed: $e')),
         );
       }
     } finally {
@@ -386,8 +387,9 @@ class _LogSleepSheetState extends ConsumerState<LogSleepSheet> {
                     ),
                     trailing: Icon(Icons.chevron_right, size: 18, color: isDark ? Colors.white54 : Colors.black54),
                     onTap: _isSaving ? null : () {
+                      final nav = Navigator.of(context, rootNavigator: true);
                       Navigator.of(context).pop();
-                      Navigator.of(context).push(
+                      nav.push(
                         MaterialPageRoute(builder: (_) => const ActiveSleepTrackerScreen()),
                       );
                     },
